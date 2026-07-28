@@ -12,8 +12,8 @@
   <div class="inner">
     <a href="/" class="site-logo">Stride</a>
     <nav class="site-nav">
-      <a href="#">Races</a>
-      <a href="#">Resources</a>
+      <span class="nav-link">Races</span>
+      <span class="nav-link">Resources</span>
       <a href="/community" class="nav-active">Community</a>
       <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
     </nav>
@@ -36,8 +36,8 @@
 
       <!-- Segments -->
       <div class="community-type-col">
-        <div style="width:40px;height:40px;border-radius:var(--radius);background:rgba(30,94,245,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
-          <span style="font-size:20px;color:var(--cobalt);">⌬</span>
+        <div style="width:40px;height:40px;border-radius:var(--radius);background:rgba(30,94,245,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cobalt)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M12 5V3"/><path d="M9 2h6"/></svg>
         </div>
         <h2 class="font-display text-xl font-bold" style="color:var(--cobalt);">Segments</h2>
         <p class="text-sm text-offwhite-muted mt-2 leading-relaxed">Four paths built for where you are right now. Each segment has its own space, resources, and group.</p>
@@ -63,8 +63,8 @@
 
       <!-- Pace Spaces -->
       <div class="community-type-col">
-        <div style="width:40px;height:40px;border-radius:var(--radius);background:rgba(108,60,225,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
-          <span style="font-size:20px;color:var(--violet);">⚡</span>
+        <div style="width:40px;height:40px;border-radius:var(--radius);background:rgba(108,60,225,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--violet)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </div>
         <h2 class="font-display text-xl font-bold" style="color:var(--violet);">Pace spaces</h2>
         <p class="text-sm text-offwhite-muted mt-2 leading-relaxed">Find runners at your effort level. A first-timer and an elite coexist here — in different rooms built for their actual pace.</p>
@@ -90,10 +90,10 @@
 
       <!-- Circles -->
       <div class="community-type-col">
-        <div style="width:40px;height:40px;border-radius:var(--radius);background:rgba(200,255,0,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
-          <span style="font-size:20px;color:var(--lime);">◎</span>
+        <div style="width:40px;height:40px;border-radius:var(--radius);background:rgba(132,204,22,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#65A30D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
         </div>
-        <h2 class="font-display text-xl font-bold" style="color:var(--lime);">Circles</h2>
+        <h2 class="font-display text-xl font-bold" style="color:#65A30D;">Circles</h2>
         <p class="text-sm text-offwhite-muted mt-2 leading-relaxed">Smaller, focused groups around specific races, interests, or geographies. Some are open, some invite-only.</p>
         <div class="mt-6 flex flex-col gap-3">
           <a href="/community/circles" class="community-example-card">
@@ -120,7 +120,7 @@
 
 <footer class="site-footer">
   <p>Stride — Built for every runner</p>
-  <div class="links"><a href="#">Races</a><a href="#">Resources</a><a href="/community">Community</a></div>
+  <div class="links"><span class="nav-link">Races</span><span class="nav-link">Resources</span><a href="/community">Community</a></div>
 </footer>
 
 <script src="/static/moderation.js"></script>
