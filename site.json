@@ -1,1 +1,4 @@
-{"businessName":"Stride"}
+export const siteConfig = {
+  name: "Stride",
+  description: "A home base that meets you where you are and builds the community to get you to your next race, stronger and healthier.",
+};

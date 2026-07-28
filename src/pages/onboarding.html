@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stride — Build your roadmap</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav">
+      <a href="#">Races</a><a href="#">Resources</a><a href="#">Community</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="container-sm py-12" id="app">
+  <a href="/" class="text-sm text-cobalt" style="text-decoration:underline;">← Back to Stride</a>
+  <div class="mt-4" id="onboarding-content"></div>
+</div>
+</main>
+
+<footer class="site-footer">
+  <p>Stride — Built for every runner</p>
+</footer>
+
+<script src="/static/pacing.js"></script>
+<script src="/static/planBuilder.js"></script>
+<script>
+(function() {
+  var SEGMENTS = {
+    "first-timer": { label: "Your first race", desc: "Never raced before? This plan builds from the ground up.", icon: "—" },
+    "returner": { label: "Coming back", desc: "Welcome back. We'll meet your body where it is right now.", icon: "↻" },
+    "competitive": { label: "Chasing a PR", desc: "You've raced before and you're ready to go faster.", icon: "⌬" },
+    "trail": { label: "On the trails", desc: "Dirt, elevation, and distance — built for the trail runner.", icon: "▲" },
+  };
+
+  var path = window.location.pathname;
+  var segSlug = path.split("/").pop() || "first-timer";
+  var segment = SEGMENTS[segSlug] || SEGMENTS["first-timer"];
+  var segKey = segSlug.replace("-", "_").toUpperCase();
+
+  var state = {
+    step: 1,
+    totalSteps: 3,
+    weeklyMileage: 10,
+    goalDistance: "Half Marathon",
+    goalRaceDate: "",
+    hasRunBefore: null,
+    motivation: "",
+    timeOff: "",
+    comingFromInjury: null,
+    injuryDescription: "",
+    previousRoutine: "",
+    currentPR: { hours: "", minutes: "", seconds: "" },
+    goalTime: { hours: "", minutes: "", seconds: "" },
+    trainingDays: "5",
+    trailType: "Mix",
+    elevationGain: "",
+    ultraDistance: null,
+  };
+
+  var DISTANCES = ["5K", "10K", "Half Marathon", "Marathon", "Ultra"];
+  var TRAIL_TYPES = ["Fire roads", "Single track", "Technical", "Mix"];
+
+  function h(tag, attrs, children) {
+    var el = document.createElement(tag);
+    if (attrs) {
+      for (var k in attrs) {
+        if (k === "className") el.className = attrs[k];
+        else if (k === "style") { for (var sk in attrs[k]) el.style[sk] = attrs[k][sk]; }
+        else if (k === "onclick") el.onclick = attrs[k];
+        else if (k === "onchange") el.onchange = attrs[k];
+        else if (k === "oninput") el.oninput = attrs[k];
+        else if (k === "type") el.setAttribute("type", attrs[k]);
+        else if (k === "value") el.value = attrs[k];
+        else if (k === "placeholder") el.setAttribute("placeholder", attrs[k]);
+        else if (k === "rows") el.setAttribute("rows", attrs[k]);
+        else if (k === "min") el.setAttribute("min", attrs[k]);
+        else if (k === "max") el.setAttribute("max", attrs[k]);
+        else if (k === "html") el.innerHTML = attrs[k];
+        else if (k === "text") el.textContent = attrs[k];
+        else if (k === "href") el.setAttribute("href", attrs[k]);
+        else el.setAttribute(k, attrs[k]);
+      }
+    }
+    if (children) {
+      if (typeof children === "string") el.textContent = children;
+      else if (Array.isArray(children)) children.forEach(function(c) { if (c) el.appendChild(c); });
+      else el.appendChild(children);
+    }
+    return el;
+  }
+
+  function toggleBtnGroup(container, options, current, onclick) {
+    options.forEach(function(opt) {
+      var isActive = current === opt;
+      var btn = h("button", {
+        type: "button",
+        className: "btn " + (isActive ? "btn-primary" : "btn-secondary"),
+        style: { fontSize: "13px", padding: "10px 16px" },
+        onclick: function() { onclick(opt); },
+        text: opt,
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function toggleYesNo(container, current, onclick) {
+    [true, false].forEach(function(val) {
+      var label = val ? "Yes" : "No";
+      var isActive = current === val;
+      var btn = h("button", {
+        type: "button",
+        className: "btn " + (isActive ? "btn-primary" : "btn-secondary"),
+        style: { fontSize: "13px", padding: "10px 20px" },
+        onclick: function() { onclick(val); },
+        text: label,
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function fieldGroup(label) {
+    var div = h("div", { className: "mb-6" });
+    var lbl = h("label", { text: label });
+    div.appendChild(lbl);
+    return div;
+  }
+
+  function timeInput(value, onChange) {
+    var input = h("input", {
+      type: "text", value: value || "",
+      style: { width: "60px", textAlign: "center", padding: "12px 8px", fontSize: "16px" },
+      placeholder: "00",
+      oninput: function(e) {
+        var v = e.target.value.replace(/\D/g, "").slice(0, 2);
+        e.target.value = v;
+        onChange(v);
+      },
+    });
+    return input;
+  }
+
+  function render() {
+    var container = document.getElementById("onboarding-content");
+    container.innerHTML = "";
+
+    // Header
+    var header = h("div", {});
+    var badge = h("span", { className: "text-xs font-semibold text-cobalt", style: { border: "1px solid rgba(30,94,245,0.3)", borderRadius: "6px", padding: "4px 12px", background: "rgba(30,94,245,0.1)" }, text: segment.label });
+    var stepInfo = h("span", { className: "text-sm text-offwhite-muted", text: "Step " + state.step + " of " + state.totalSteps, style: { marginLeft: "12px" } });
+    header.appendChild(badge);
+    header.appendChild(stepInfo);
+    container.appendChild(header);
+
+    var title = h("h1", { className: "mt-4 font-display text-3xl md:text-4xl", text: segment.label });
+    var desc = h("p", { className: "mt-2 text-offwhite-muted", text: segment.desc });
+    container.appendChild(title);
+    container.appendChild(desc);
+
+    // Progress bar
+    var pb = h("div", { className: "mt-6 progress-bar" });
+    for (var i = 0; i < state.totalSteps; i++) {
+      pb.appendChild(h("div", { className: "segment" + (i < state.step ? " active" : "") }));
+    }
+    container.appendChild(pb);
+
+    var form = h("form", { onsubmit: function(e) { e.preventDefault(); handleSubmit(); } });
+    form.style.marginTop = "32px";
+
+    if (state.step === 1) {
+      // Weekly mileage
+      var g1 = fieldGroup("Current weekly mileage");
+      var rangeRow = h("div", { className: "flex items-center gap-4" });
+      var slider = h("input", { type: "range", min: "0", max: "80", value: String(state.weeklyMileage), style: { flex: "1" },
+        oninput: function(e) { state.weeklyMileage = parseInt(e.target.value); render(); } });
+      var val = h("span", { className: "font-display text-2xl text-cobalt", text: String(state.weeklyMileage), style: { width: "50px", textAlign: "right", fontWeight: "700" } });
+      rangeRow.appendChild(slider); rangeRow.appendChild(val);
+      g1.appendChild(rangeRow);
+      g1.appendChild(h("p", { className: "text-xs text-offwhite-muted mt-1", text: "miles per week" }));
+      form.appendChild(g1);
+
+      // Goal distance
+      var g2 = fieldGroup("Goal race distance");
+      var distGrid = h("div", { className: "grid grid-cols-3 sm:grid-cols-5 gap-2" });
+      toggleBtnGroup(distGrid, DISTANCES, state.goalDistance, function(d) { state.goalDistance = d; render(); });
+      g2.appendChild(distGrid);
+      form.appendChild(g2);
+
+      // Race date
+      var g3 = fieldGroup("Goal race date");
+      g3.appendChild(h("input", { type: "date", value: state.goalRaceDate, oninput: function(e) { state.goalRaceDate = e.target.value; } }));
+      form.appendChild(g3);
+    }
+
+    if (state.step === 2) {
+      if (segSlug === "first-timer") {
+        var g = fieldGroup("Have you done any running before?");
+        var btns = h("div", { className: "flex gap-3" });
+        toggleYesNo(btns, state.hasRunBefore, function(v) { state.hasRunBefore = v; render(); });
+        g.appendChild(btns);
+        form.appendChild(g);
+        if (state.hasRunBefore) {
+          var g2 = fieldGroup("What's motivating you to start?");
+          g2.appendChild(h("textarea", { rows: "3", placeholder: "Optional — tell us what's driving you.", oninput: function(e) { state.motivation = e.target.value; } }));
+          form.appendChild(g2);
+        }
+      }
+      if (segSlug === "returner") {
+        var g1 = fieldGroup("How long has it been since you ran regularly?");
+        var sel = h("select", { onchange: function(e) { state.timeOff = e.target.value; render(); } });
+        ["", "A few weeks", "A few months", "About a year", "More than a year"].forEach(function(o) {
+          sel.appendChild(h("option", { value: o === "" ? "" : o, text: o === "" ? "Select..." : o }));
+        });
+        sel.value = state.timeOff;
+        g1.appendChild(sel);
+        form.appendChild(g1);
+
+        var g2 = fieldGroup("Are you coming back from an injury?");
+        var btns2 = h("div", { className: "flex gap-3" });
+        toggleYesNo(btns2, state.comingFromInjury, function(v) { state.comingFromInjury = v; render(); });
+        g2.appendChild(btns2);
+        form.appendChild(g2);
+        if (state.comingFromInjury) {
+          var g3 = fieldGroup("Describe the injury");
+          g3.appendChild(h("textarea", { rows: "3", placeholder: "What happened and how has recovery been?", oninput: function(e) { state.injuryDescription = e.target.value; } }));
+          form.appendChild(g3);
+        }
+
+        var g4 = fieldGroup("What was your routine before the break?");
+        g4.appendChild(h("textarea", { rows: "3", placeholder: "Optional — distances, frequency, paces...", oninput: function(e) { state.previousRoutine = e.target.value; } }));
+        form.appendChild(g4);
+      }
+      if (segSlug === "competitive") {
+        var g1 = fieldGroup("Your current PR for this distance");
+        var row1 = h("div", { className: "flex items-center gap-2" });
+        row1.appendChild(timeInput(state.currentPR.hours, function(v) { state.currentPR.hours = v; }));
+        row1.appendChild(h("span", { text: ":", style: { color: "var(--offwhite-muted)" } }));
+        row1.appendChild(timeInput(state.currentPR.minutes, function(v) { state.currentPR.minutes = v; }));
+        row1.appendChild(h("span", { text: ":", style: { color: "var(--offwhite-muted)" } }));
+        row1.appendChild(timeInput(state.currentPR.seconds, function(v) { state.currentPR.seconds = v; }));
+        row1.appendChild(h("span", { text: "hr : min : sec", className: "text-xs text-offwhite-muted", style: { marginLeft: "8px" } }));
+        g1.appendChild(row1);
+        form.appendChild(g1);
+
+        var g2 = fieldGroup("How many days per week are you training now?");
+        var grid = h("div", { className: "grid grid-cols-6 gap-2" });
+        toggleBtnGroup(grid, ["2","3","4","5","6","7"], state.trainingDays, function(d) { state.trainingDays = d; render(); });
+        g2.appendChild(grid);
+        form.appendChild(g2);
+      }
+      if (segSlug === "trail") {
+        var g1 = fieldGroup("What type of trails do you run?");
+        var grid = h("div", { className: "grid grid-cols-2 gap-3" });
+        toggleBtnGroup(grid, TRAIL_TYPES, state.trailType, function(t) { state.trailType = t; render(); });
+        g1.appendChild(grid);
+        form.appendChild(g1);
+
+        var g2 = fieldGroup("Typical elevation gain per week (feet)");
+        g2.appendChild(h("input", { type: "number", placeholder: "e.g. 2000", oninput: function(e) { state.elevationGain = e.target.value; } }));
+        form.appendChild(g2);
+
+        var g3 = fieldGroup("Planning on any ultra distances?");
+        var btns3 = h("div", { className: "flex gap-3" });
+        toggleYesNo(btns3, state.ultraDistance, function(v) { state.ultraDistance = v; render(); });
+        g3.appendChild(btns3);
+        form.appendChild(g3);
+      }
+    }
+
+    if (state.step === 3) {
+      var review = h("div", { className: "card-dark" });
+      var rh3 = h("h3", { className: "font-display text-xl", text: "Review your profile" });
+      review.appendChild(rh3);
+      var dl = h("div", { className: "mt-4", style: { display: "flex", flexDirection: "column", gap: "12px" } });
+      function rr(label, value) {
+        var row = h("div", { style: { display: "flex", justifyContent: "space-between" } });
+        row.appendChild(h("span", { className: "text-sm text-offwhite-muted", text: label }));
+        row.appendChild(h("span", { className: "text-sm font-semibold", text: value }));
+        return row;
+      }
+      dl.appendChild(rr("Path", segment.label));
+      dl.appendChild(rr("Weekly mileage", state.weeklyMileage + " miles"));
+      dl.appendChild(rr("Goal distance", state.goalDistance));
+      dl.appendChild(rr("Race date", state.goalRaceDate || "Not set"));
+      if (segSlug === "first-timer" && state.hasRunBefore !== null) dl.appendChild(rr("Run before", state.hasRunBefore ? "Yes" : "No"));
+      if (segSlug === "returner" && state.timeOff) dl.appendChild(rr("Time off", state.timeOff));
+      if (segSlug === "competitive" && state.currentPR.hours) {
+        dl.appendChild(rr("Current PR", state.currentPR.hours + ":" + state.currentPR.minutes + ":" + state.currentPR.seconds));
+      }
+      if (segSlug === "trail") dl.appendChild(rr("Trail type", state.trailType));
+      review.appendChild(dl);
+      form.appendChild(review);
+    }
+
+    // Navigation buttons
+    var nav = h("div", { style: { borderTop: "1px solid var(--border)", paddingTop: "24px", marginTop: "32px", display: "flex", justifyContent: "space-between" } });
+    if (state.step > 1) {
+      var back = h("button", { type: "button", className: "btn btn-secondary", text: "Back", onclick: function() { state.step--; render(); } });
+      nav.appendChild(back);
+    } else {
+      nav.appendChild(h("div", {}));
+    }
+    if (state.step < state.totalSteps) {
+      var next = h("button", { type: "button", className: "btn btn-primary", text: "Continue", onclick: function() { state.step++; render(); } });
+      nav.appendChild(next);
+    } else {
+      var submit = h("button", { type: "submit", className: "btn btn-primary", text: "Map my roadmap", style: { padding: "14px 32px" } });
+      nav.appendChild(submit);
+    }
+    form.appendChild(nav);
+    container.appendChild(form);
+  }
+
+  function handleSubmit() {
+    var raceTimeSecs;
+    if (state.currentPR.hours) {
+      var hh = parseInt(state.currentPR.hours) || 0;
+      var mm = parseInt(state.currentPR.minutes) || 0;
+      var ss = parseInt(state.currentPR.seconds) || 0;
+      raceTimeSecs = hh * 3600 + mm * 60 + ss;
+    }
+
+    var plan = buildPlan({
+      segment: segKey,
+      goalDistance: state.goalDistance,
+      goalRaceDate: state.goalRaceDate,
+      weeklyMileage: state.weeklyMileage,
+      recentRaceTimeSecs: raceTimeSecs || undefined,
+      recentRaceDistance: raceTimeSecs ? state.goalDistance : undefined,
+    });
+
+    var planId = Date.now().toString(36);
+    sessionStorage.setItem("plan-" + planId, JSON.stringify(plan));
+    window.location.href = "/plan/" + planId;
+  }
+
+  render();
+})();
+</script>
+
+</body>
+</html>

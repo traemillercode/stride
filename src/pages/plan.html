@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stride — Your roadmap</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav">
+      <a href="#">Races</a><a href="#">Resources</a><a href="#">Community</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="container py-12" id="plan-app">
+  <a href="/" class="text-sm text-cobalt" style="text-decoration:underline;">← Back to Stride</a>
+  <div id="plan-content" class="mt-6"></div>
+</div>
+</main>
+
+<footer class="site-footer">
+  <p>Stride — Built for every runner</p>
+</footer>
+
+<script src="/static/pacing.js"></script>
+<script src="/static/planBuilder.js"></script>
+<script>
+(function() {
+  var path = window.location.pathname;
+  var planId = path.split("/").pop();
+  var raw = sessionStorage.getItem("plan-" + planId);
+
+  if (!raw) {
+    document.getElementById("plan-content").innerHTML = '<div style="text-align:center;padding:80px 0;"><p class="text-offwhite-muted">No roadmap found. <a href="/" style="color:var(--cobalt);text-decoration:underline;">Start fresh</a>.</p></div>';
+    return;
+  }
+
+  var plan = JSON.parse(raw);
+
+  function h(tag, attrs, children) {
+    var el = document.createElement(tag);
+    if (attrs) {
+      for (var k in attrs) {
+        if (k === "className") el.className = attrs[k];
+        else if (k === "style") { for (var sk in attrs[k]) el.style[sk] = attrs[k][sk]; }
+        else if (k === "onclick") el.onclick = attrs[k];
+        else if (k === "html") el.innerHTML = attrs[k];
+        else if (k === "text") el.textContent = attrs[k];
+        else el.setAttribute(k, attrs[k]);
+      }
+    }
+    if (children) {
+      if (typeof children === "string") el.textContent = children;
+      else if (Array.isArray(children)) children.forEach(function(c) { if (c) el.appendChild(c); });
+      else el.appendChild(children);
+    }
+    return el;
+  }
+
+  function statBox(label, value) {
+    var div = h("div", { className: "stat-box" });
+    div.appendChild(h("span", { className: "stat-label", text: label }));
+    div.appendChild(h("span", { className: "stat-value", text: value, style: { textTransform: "capitalize" } }));
+    return div;
+  }
+
+  function paceRow(label, pace, feel, highlight) {
+    var tr = h("tr", { style: highlight ? "background:rgba(30,94,245,0.1);" : "" });
+    tr.appendChild(h("td", { className: "font-semibold " + (highlight ? "text-cobalt" : ""), style: { padding: "12px 16px" }, text: label }));
+    tr.appendChild(h("td", { style: { padding: "12px 16px", fontFamily: "monospace" }, text: formatPace(pace) }));
+    tr.appendChild(h("td", { className: "text-offwhite-muted", style: { padding: "12px 16px" }, text: feel }));
+    return tr;
+  }
+
+  function render() {
+    var container = document.getElementById("plan-content");
+    container.innerHTML = "";
+
+    // Summary header
+    var summary = h("div", { className: "card-dark md:p-8" });
+    summary.appendChild(h("h1", { className: "font-display text-3xl md:text-4xl", text: "Your " + plan.totalWeeks + "-week roadmap" }));
+    var stats = h("div", { className: "mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" });
+    stats.appendChild(statBox("Path", plan.segment.replace(/_/g, " ")));
+    stats.appendChild(statBox("Weekly mileage", plan.weeklyMileage + " mi"));
+    stats.appendChild(statBox("Goal race", plan.goalDistance));
+    stats.appendChild(statBox("Race date", plan.goalRaceDate || "TBD"));
+    summary.appendChild(stats);
+    container.appendChild(summary);
+
+    // Pace targets
+    var paceSection = h("div", { className: "mt-10" });
+    paceSection.appendChild(h("h2", { className: "font-display text-2xl", text: "Pace targets" }));
+    var table = h("table", { className: "mt-4 pace-table" });
+    table.style.overflow = "hidden";
+    table.style.border = "1px solid var(--border)";
+    table.style.borderRadius = "6px";
+    var thead = h("thead", {});
+    thead.innerHTML = '<tr class="card-dark"><th style="padding:12px 16px;text-align:left;">Training pace</th><th style="padding:12px 16px;text-align:left;">Per mile</th><th style="padding:12px 16px;text-align:left;">Feel</th></tr>';
+    table.appendChild(thead);
+    var tbody = h("tbody", {});
+    tbody.appendChild(paceRow("Easy", plan.paces.easySecsPerMi, "Conversational — can talk in full sentences"));
+    tbody.appendChild(paceRow("Tempo", plan.paces.tempoSecsPerMi, "Comfortably hard — could hold for an hour"));
+    tbody.appendChild(paceRow("Threshold", plan.paces.thresholdSecsPerMi, "Controlled but fast — lactate threshold"));
+    tbody.appendChild(paceRow("Long run", plan.paces.longRunSecsPerMi, "Steady — finish feeling strong"));
+    tbody.appendChild(paceRow("Race goal", plan.paces.raceGoalSecsPerMi, "Predicted finish: " + formatDuration(plan.paces.predictedFinishTimeSecs), true));
+    table.appendChild(tbody);
+    paceSection.appendChild(table);
+    container.appendChild(paceSection);
+
+    // Phase summary
+    var phaseSection = h("div", { className: "mt-10" });
+    phaseSection.appendChild(h("h2", { className: "font-display text-2xl", text: "Training phases" }));
+    var phaseGrid = h("div", { className: "mt-4 grid gap-3 sm:grid-cols-4" });
+    ["base","build","peak","taper"].forEach(function(phase) {
+      var pw = plan.weeks.filter(function(w) { return w.phase === phase; });
+      if (pw.length === 0) return;
+      var card = h("div", { className: "card-dark " + getPhaseBg(phase) });
+      card.appendChild(h("span", { className: "text-sm font-semibold " + getPhaseColor(phase), text: phase }));
+      card.appendChild(h("span", { className: "mt-1 block text-xs text-offwhite-muted", text: "Weeks " + pw[0].weekNumber + "\u2013" + pw[pw.length-1].weekNumber }));
+      phaseGrid.appendChild(card);
+    });
+    phaseSection.appendChild(phaseGrid);
+    container.appendChild(phaseSection);
+
+    // Week by week
+    var wbwSection = h("div", { className: "mt-10" });
+    wbwSection.appendChild(h("h2", { className: "font-display text-2xl", text: "Week by week" }));
+    var weekGrid = h("div", { className: "mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" });
+    plan.weeks.forEach(function(week) {
+      var card = h("div", { className: "card-dark " + getPhaseBg(week.phase) });
+      var header = h("div", { className: "flex items-center justify-between", style: { cursor: "pointer" } });
+      var left = h("div", {});
+      left.appendChild(h("span", { className: "text-xs font-semibold " + getPhaseColor(week.phase), text: week.phase }));
+      left.appendChild(h("span", { className: "mt-1 block font-display text-lg", text: "Week " + week.weekNumber }));
+      header.appendChild(left);
+      header.appendChild(h("span", { className: "text-sm text-offwhite-muted", text: week.totalMileage + " mi" }));
+
+      var detailId = "w-" + week.weekNumber;
+      var detail = h("div", { id: detailId, style: { borderTop: "1px solid var(--border)", paddingTop: "12px", marginTop: "12px" } });
+
+      week.workouts.forEach(function(w) {
+        var cls = getWorkoutClass(w.type);
+        var wc = h("div", { className: "workout-card " + cls, style: { marginBottom: "4px" } });
+        wc.appendChild(h("span", { className: "day", text: DAY_LABELS[w.dayOfWeek] }));
+        wc.appendChild(h("span", { className: "type", text: w.type }));
+        if (w.targetDistance) wc.appendChild(h("span", { text: w.targetDistance + " mi", style: { fontSize: "11px" } }));
+        else if (w.targetDuration) wc.appendChild(h("span", { text: w.targetDuration + " min", style: { fontSize: "11px" } }));
+        detail.appendChild(wc);
+      });
+
+      header.onclick = function() {
+        var d = document.getElementById(detailId);
+        d.style.display = d.style.display === "none" ? "block" : "none";
+      };
+      detail.style.display = "none";
+
+      card.appendChild(header);
+      card.appendChild(detail);
+      weekGrid.appendChild(card);
+    });
+    wbwSection.appendChild(weekGrid);
+    container.appendChild(wbwSection);
+
+    var note = h("p", { className: "mt-12 text-center text-xs text-offwhite-muted", text: "This roadmap is tailored to your inputs. Come back as your fitness changes to rebuild it." });
+    container.appendChild(note);
+  }
+
+  render();
+})();
+</script>
+
+</body>
+</html>
