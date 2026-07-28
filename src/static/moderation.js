@@ -44,7 +44,7 @@ function showReportDialog(targetName) {
   dialog.className = "mod-dialog";
 
   dialog.innerHTML = '<h3 class="font-display text-lg font-bold">Report content</h3>' +
-    '<p class="text-sm text-offwhite-muted mt-1">Report a concern about <strong>' + escapeHTML(targetName) + '</strong>.</p>' +
+    '<p class="text-sm text-muted mt-1">Report a concern about <strong>' + escapeHTML(targetName) + '</strong>.</p>' +
     '<label class="mt-4 text-sm font-semibold" for="mod-reason">Reason</label>' +
     '<select id="mod-reason" style="margin-top:4px;">' +
     '<option value="">Select...</option>' +
@@ -79,7 +79,7 @@ function showBlockDialog(targetName) {
   dialog.className = "mod-dialog";
 
   dialog.innerHTML = '<h3 class="font-display text-lg font-bold">Block user</h3>' +
-    '<p class="text-sm text-offwhite-muted mt-1">Block <strong>' + escapeHTML(targetName) + '</strong>? You won\'t see their posts anymore.</p>' +
+    '<p class="text-sm text-muted mt-1">Block <strong>' + escapeHTML(targetName) + '</strong>? You won\'t see their posts anymore.</p>' +
     '<div class="mod-dialog-actions" style="margin-top:20px;">' +
     '<button class="btn btn-secondary" id="mod-cancel" style="font-size:12px;">Cancel</button>' +
     '<button class="btn btn-primary" id="mod-confirm" style="font-size:12px;background:var(--magenta);border-color:var(--magenta);">Block user</button>' +

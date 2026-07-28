@@ -62,7 +62,7 @@
         { user: "Jamie L.", action: "completed their first 5K training run — 3.1 miles without stopping", time: "2 hours ago" },
         { user: "Reyna M.", action: "asked about shin pain — got 8 responses from the community", time: "5 hours ago" },
         { user: "Coach Mike", action: "posted: 'Your first race isn't about speed. It's about proving you can do hard things.'", time: "8 hours ago" },
-        { user: "Tanya W.", action: "just joined the segment. Welcome them!", time: "12 hours ago" },
+        { user: "Tanya W.", action: "just joined the segment. Welcome them.", time: "12 hours ago" },
       ]
     },
     "returner": {
@@ -116,18 +116,18 @@
   header += '<div style="width:64px;height:64px;border-radius:var(--radius);background:rgba(30,94,245,0.1);display:flex;align-items:center;justify-content:center;font-size:32px;color:' + segment.accentColor + ';">' + segment.icon + '</div>';
   header += '<div style="flex:1;min-width:260px;">';
   header += '<h1 class="font-display" style="font-size:40px;font-weight:900;letter-spacing:-0.03em;line-height:1.1;">' + segment.label + '</h1>';
-  header += '<p class="text-lg text-offwhite-muted mt-2 leading-relaxed">' + segment.desc + '</p>';
+  header += '<p class="text-lg text-muted mt-2 leading-relaxed">' + segment.desc + '</p>';
   header += '<div class="flex gap-6 mt-3 text-sm">';
   header += '<span style="color:' + segment.accentColor + ';font-weight:600;">' + segment.memberCount + ' members</span>';
-  header += '<span class="text-offwhite-muted">•</span>';
-  header += '<span class="text-offwhite-muted">Active daily</span>';
+  header += '<span class="text-muted">•</span>';
+  header += '<span class="text-muted">Active daily</span>';
   header += '</div></div></div>';
   container.innerHTML = header;
 
   // Pace spaces links
   var paceLinks = '<div class="card-dark mb-8">';
   paceLinks += '<h3 class="font-display text-lg font-bold" style="color:var(--violet);">Find runners at your pace</h3>';
-  paceLinks += '<p class="text-sm text-offwhite-muted mt-1 mb-4">Pace-based spaces where you can connect with runners at your effort level.</p>';
+  paceLinks += '<p class="text-sm text-muted mt-1 mb-4">Pace-based spaces where you can connect with runners at your effort level.</p>';
   paceLinks += '<div class="flex flex-wrap gap-3">';
   var paces = [
     { slug: "sub-7", label: "Sub-7:00 /mi" },
@@ -147,8 +147,8 @@
   segment.recentActivity.forEach(function(a) {
     activity += '<div class="card-dark" style="margin-bottom:8px;padding:16px;">';
     activity += '<span class="text-sm font-semibold">' + a.user + '</span> ';
-    activity += '<span class="text-sm text-offwhite-muted">' + a.action + '</span>';
-    activity += '<span class="block text-xs text-offwhite-dim mt-1">' + a.time + '</span>';
+    activity += '<span class="text-sm text-muted">' + a.action + '</span>';
+    activity += '<span class="block text-xs text-dim mt-1">' + a.time + '</span>';
     activity += '</div>';
   });
   activity += '</div>';
