@@ -12,8 +12,8 @@
   <div class="inner">
     <a href="/" class="site-logo">Stride</a>
     <nav class="site-nav">
-      <a href="#">Races</a>
-      <a href="#">Resources</a>
+      <span class="nav-link">Races</span>
+      <span class="nav-link">Resources</span>
       <a href="/community">Community</a>
       <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
     </nav>
@@ -45,25 +45,25 @@
     <p class="mt-3 text-offwhite-muted text-lg">Each path is built for a different kind of runner. Pick the one that fits.</p>
     <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <a href="/onboarding/first-timer" class="segment-card">
-        <div class="icon">—</div>
+        <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h3c1 0 3-2 3-4V8c0-1 .6-2 1.5-2.5L14 3"/><path d="M14 3l2 2M14 3l-1 4"/><path d="M18 12h2l1 3-2 4h-3l-2-6"/><path d="M5 20v-2"/><circle cx="20" cy="17" r="1.5"/></svg></div>
         <h3>Your first race</h3>
         <p>Never raced before? Start here and build the foundation for your first starting line.</p>
         <span class="link">Start here →</span>
       </a>
       <a href="/onboarding/returner" class="segment-card">
-        <div class="icon">↻</div>
+        <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg></div>
         <h3>Coming back</h3>
         <p>Returning after time off or injury? A roadmap that respects where your body is right now.</p>
         <span class="link">Start here →</span>
       </a>
       <a href="/onboarding/competitive" class="segment-card">
-        <div class="icon">⌬</div>
+        <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M12 5V3"/><path d="M9 2h6"/><path d="M4.22 5.22l1.42 1.42"/><path d="M18.36 6.64l1.42-1.42"/></svg></div>
         <h3>Chasing a PR</h3>
         <p>Training with purpose. Pace targets, periodized blocks, and a plan built for speed.</p>
         <span class="link">Start here →</span>
       </a>
       <a href="/onboarding/trail" class="segment-card">
-        <div class="icon">▲</div>
+        <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22l6-10 5 5 4-8 5 4"/><path d="M8 12l4-8"/></svg></div>
         <h3>On the trails</h3>
         <p>Trail-specific training, elevation-aware planning, and a community that gets dirt under its nails.</p>
         <span class="link">Start here →</span>
@@ -73,7 +73,7 @@
 </section>
 
 <!-- Live Race Module -->
-<section class="section-charcoal section-border-top py-16">
+<section class="section-surface3 section-border-top py-16">
   <div class="container-sm">
     <div class="card-dark md:p-10" style="border-left:4px solid var(--magenta);">
       <div class="live-badge">
@@ -93,45 +93,45 @@
 </section>
 
 <!-- Featured Resources -->
-<section class="section-surface3 section-border-top py-16">
+<section class="section-surface2 section-border-top py-16">
   <div class="container">
     <h2 class="section-heading">Everything you need between start and finish</h2>
     <p class="mt-3 text-offwhite-muted text-lg">Real guides, real gear, real voices — built by runners who log the miles.</p>
     <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <!-- Nutrition -->
-      <a href="#" class="resource-card">
+      <span class="resource-card">
         <span class="type-badge type-nutrition">Nutrition</span>
         <h3 class="font-display text-lg font-bold">Race-day nutrition: what to eat the week before</h3>
         <p class="mt-2 text-sm text-offwhite-muted leading-relaxed">Carb loading isn't just a pasta dinner the night before. A practical timeline for the 7 days leading into race day.</p>
         <span class="read-more text-lime">Read more →</span>
-      </a>
+      </span>
       <!-- Gear -->
-      <a href="#" class="resource-card">
+      <span class="resource-card">
         <span class="type-badge type-gear">Gear</span>
         <h3 class="font-display text-lg font-bold">Best daily trainers for new runners, summer 2026</h3>
         <p class="mt-2 text-sm text-offwhite-muted leading-relaxed">We tested 12 shoes across 200 miles. Here's what held up, what didn't, and what's worth your money.</p>
         <span class="read-more text-cobalt">Read more →</span>
-      </a>
+      </span>
       <!-- Podcast -->
-      <a href="#" class="resource-card">
+      <span class="resource-card">
         <span class="type-badge type-podcast">Podcast</span>
         <h3 class="font-display text-lg font-bold">The Long Run: a playlist for your weekend miles</h3>
         <p class="mt-2 text-sm text-offwhite-muted leading-relaxed">Curated running mixes from DJs who race. Two hours of tracks paced for your long, slow distance days.</p>
         <span class="read-more text-violet">Read more →</span>
-      </a>
+      </span>
       <!-- Guide -->
-      <a href="#" class="resource-card">
+      <span class="resource-card">
         <span class="type-badge type-guide">Guide</span>
         <h3 class="font-display text-lg font-bold">How to read your running form: a beginner's guide</h3>
         <p class="mt-2 text-sm text-offwhite-muted leading-relaxed">You don't need a lab to spot form issues. Learn the four things to watch for on your next run.</p>
         <span class="read-more text-magenta">Read more →</span>
-      </a>
+      </span>
     </div>
   </div>
 </section>
 
 <!-- Athlete / Expert Spotlight -->
-<section class="section-charcoal section-border-top py-16">
+<section class="section-surface3 section-border-top py-16">
   <div class="container-sm">
     <h2 class="section-heading text-center">How the pros train</h2>
     <p class="mt-3 text-offwhite-muted text-lg text-center">Real routines from real runners</p>
@@ -140,7 +140,7 @@
         <div style="flex:1;min-width:260px;">
           <h3 class="font-display text-2xl font-bold" style="color:var(--violet);">Conner Mantz</h3>
           <p class="text-sm text-offwhite-muted mt-1">Two-time US Olympic marathoner, 2024 Chicago Marathon top American finisher</p>
-          <p class="text-sm mt-4 leading-relaxed" style="color:var(--offwhite);">Mantz runs 130–140 miles per week during marathon builds, with his key workout being a 22-mile long run that finishes at marathon pace. His approach: "I'd rather be slightly undertrained than overtrained." He takes an easy day after every hard session — no exceptions.</p>
+          <p class="text-sm mt-4 leading-relaxed">Mantz runs 130–140 miles per week during marathon builds, with his key workout being a 22-mile long run that finishes at marathon pace. His approach: "I'd rather be slightly undertrained than overtrained." He takes an easy day after every hard session — no exceptions.</p>
           <p class="text-xs text-offwhite-dim mt-3">via Runner's World interview, January 2025</p>
         </div>
         <div style="flex:0 0 300px;min-width:260px;">
@@ -158,26 +158,26 @@
   <div class="container-narrow">
     <h2 class="font-display text-xl font-bold" style="color:var(--violet);margin-bottom:16px;">From the running world</h2>
     <div class="news-strip-item">
-      <a href="#" class="text-sm font-semibold">Nike launches Alphafly 4 — what's changed and who it's for</a>
+      <span class="text-sm font-semibold">Nike launches Alphafly 4 — what's changed and who it's for</span>
       <span class="news-date">Jul 22</span>
     </div>
     <div class="news-strip-item">
-      <a href="#" class="text-sm font-semibold">Boston Marathon 2027 qualifying window opens September 1</a>
+      <span class="text-sm font-semibold">Boston Marathon 2027 qualifying window opens September 1</span>
       <span class="news-date">Jul 18</span>
     </div>
     <div class="news-strip-item">
-      <a href="#" class="text-sm font-semibold">New study: polarized training beats threshold-heavy plans for recreational runners</a>
+      <span class="text-sm font-semibold">New study: polarized training beats threshold-heavy plans for recreational runners</span>
       <span class="news-date">Jul 14</span>
     </div>
     <div class="news-strip-item">
-      <a href="#" class="text-sm font-semibold">UTMB 2026 recap: records fall on both the men's and women's sides</a>
+      <span class="text-sm font-semibold">UTMB 2026 recap: records fall on both the men's and women's sides</span>
       <span class="news-date">Jul 10</span>
     </div>
   </div>
 </section>
 
 <!-- Testimonials -->
-<section class="section-charcoal section-border-top py-16">
+<section class="section-surface3 section-border-top py-16">
   <div class="container">
     <h2 class="section-heading">Real runners, real progress</h2>
     <div class="mt-10 grid gap-6 md:grid-cols-3">
@@ -185,21 +185,21 @@
         <p class="text-sm text-offwhite-muted leading-relaxed" style="font-style:italic;"><span style="color:var(--magenta);font-weight:900;font-size:20px;">&ldquo;</span>I went from couch to half marathon in 14 weeks. The roadmap kept me honest without making me feel like I didn't belong.<span style="color:var(--magenta);font-weight:900;">&rdquo;</span></p>
         <div class="mt-4" style="border-top:1px solid var(--border);padding-top:16px;">
           <span class="block text-sm font-semibold">Marcus D.</span>
-          <span class="block text-xs" style="color:var(--lime);">First race</span>
+          <span class="block text-xs" style="color:#65A30D;">First race</span>
         </div>
       </div>
       <div class="card-dark" style="border-left: 3px solid var(--magenta);">
         <p class="text-sm text-offwhite-muted leading-relaxed" style="font-style:italic;"><span style="color:var(--magenta);font-weight:900;font-size:20px;">&ldquo;</span>After two years off with an Achilles issue, I was terrified of re-injury. The returner path had me running pain-free by week six.<span style="color:var(--magenta);font-weight:900;">&rdquo;</span></p>
         <div class="mt-4" style="border-top:1px solid var(--border);padding-top:16px;">
           <span class="block text-sm font-semibold">Priya K.</span>
-          <span class="block text-xs" style="color:var(--lime);">Coming back</span>
+          <span class="block text-xs" style="color:#65A30D;">Coming back</span>
         </div>
       </div>
       <div class="card-dark" style="border-left: 3px solid var(--magenta);">
         <p class="text-sm text-offwhite-muted leading-relaxed" style="font-style:italic;"><span style="color:var(--magenta);font-weight:900;font-size:20px;">&ldquo;</span>Dropped 8 minutes off my marathon PR using the competitive plan. The pacing calculator alone was worth it.<span style="color:var(--magenta);font-weight:900;">&rdquo;</span></p>
         <div class="mt-4" style="border-top:1px solid var(--border);padding-top:16px;">
           <span class="block text-sm font-semibold">David R.</span>
-          <span class="block text-xs" style="color:var(--lime);">Chasing a PR</span>
+          <span class="block text-xs" style="color:#65A30D;">Chasing a PR</span>
         </div>
       </div>
     </div>
@@ -210,7 +210,7 @@
 
 <footer class="site-footer">
   <p>Stride — Built for every runner</p>
-  <div class="links"><a href="#">Races</a><a href="#">Resources</a><a href="/community">Community</a></div>
+  <div class="links"><span class="nav-link">Races</span><span class="nav-link">Resources</span><a href="/community">Community</a></div>
 </footer>
 
 </body>
