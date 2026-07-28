@@ -1,0 +1,178 @@
+<!--
+  Data model extension for future database (Prisma schema):
+
+  model CommunitySpace {
+    id            String   @id @default(uuid())
+    name          String
+    slug          String   @unique
+    type          String   // segment | circle | pace_band
+    description   String?
+    parentSpaceId String?  // for nesting circles under segments
+    joinCode      String?  // for invite-based circles
+    paceBandMin   Float?   // min pace in min/mi for pace_band spaces
+    paceBandMax   Float?   // max pace in min/mi for pace_band spaces
+    memberCount   Int      @default(0)
+    createdAt     DateTime @default(now())
+  }
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stride — Circles</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav">
+      <a href="#">Races</a>
+      <a href="#">Resources</a>
+      <a href="/community" class="nav-active">Community</a>
+      <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section class="section-charcoal py-16">
+  <div class="container">
+    <a href="/community" class="text-sm" style="color:var(--violet);text-decoration:underline;">← Back to community</a>
+    <h1 class="font-display mt-4" style="font-size:40px;font-weight:900;letter-spacing:-0.03em;line-height:1.1;">Circles</h1>
+    <p class="text-lg text-offwhite-muted mt-2" style="max-width:600px;">Small, focused groups for specific races, interests, and geographies. Find your people.</p>
+  </div>
+</section>
+
+<section class="section-surface2 section-border-top py-12">
+  <div class="container-narrow">
+
+    <!-- Training cohorts -->
+    <h2 class="font-display text-xl font-bold mb-4" style="color:var(--cobalt);">Training cohorts</h2>
+    <div class="flex flex-col gap-3 mb-10">
+      <div class="circle-card">
+        <div>
+          <span class="block text-sm font-semibold">Chicago Spring Half — Fall 2026</span>
+          <span class="block text-xs text-offwhite-muted mt-1">Training together for the Chicago spring half. Week-by-week accountability, shared long runs, race-day meetup.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          <span class="circle-type type-gear" style="background:rgba(30,94,245,0.12);color:var(--cobalt);">Cohort</span>
+          <span class="text-xs text-offwhite-muted">348 members</span>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;">Join</button>
+        </div>
+      </div>
+      <div class="circle-card">
+        <div>
+          <span class="block text-sm font-semibold">Boston 2027 qualifiers</span>
+          <span class="block text-xs text-offwhite-muted mt-1">For runners targeting a BQ. Share training blocks, race selection strategy, and the qualifying attempt itself.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          <span class="circle-type type-gear" style="background:rgba(30,94,245,0.12);color:var(--cobalt);">Cohort</span>
+          <span class="text-xs text-offwhite-muted">512 members</span>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;">Join</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Local groups -->
+    <h2 class="font-display text-xl font-bold mb-4" style="color:var(--violet);">Local groups</h2>
+    <div class="flex flex-col gap-3 mb-10">
+      <div class="circle-card">
+        <div>
+          <span class="block text-sm font-semibold">Denver Trail Runners</span>
+          <span class="block text-xs text-offwhite-muted mt-1">Weekly group runs on Front Range trails. All paces welcome — we regroup at the trailhead.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          <span class="circle-type" style="background:rgba(108,60,225,0.12);color:var(--violet);">Local</span>
+          <span class="text-xs text-offwhite-muted">1.2K members</span>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;">Join</button>
+        </div>
+      </div>
+      <div class="circle-card">
+        <div>
+          <span class="block text-sm font-semibold">NYC morning crew</span>
+          <span class="block text-xs text-offwhite-muted mt-1">Central Park loops at 6 AM, Tuesdays and Thursdays. Coffee after.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          <span class="circle-type" style="background:rgba(108,60,225,0.12);color:var(--violet);">Local</span>
+          <span class="text-xs text-offwhite-muted">267 members</span>
+          <button class="btn btn-violet" style="padding:8px 16px;font-size:12px;">Join</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interest groups -->
+    <h2 class="font-display text-xl font-bold mb-4" style="color:var(--lime);">Interest groups</h2>
+    <div class="flex flex-col gap-3 mb-10">
+      <div class="circle-card">
+        <div>
+          <span class="block text-sm font-semibold">Strength for runners</span>
+          <span class="block text-xs text-offwhite-muted mt-1">Programming, accountability, and form checks for runners who lift. No bro science — evidence-based S&C for endurance athletes.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          <span class="circle-type" style="background:rgba(200,255,0,0.12);color:var(--lime);">Interest</span>
+          <span class="text-xs text-offwhite-muted">892 members</span>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;">Join</button>
+        </div>
+      </div>
+      <div class="circle-card">
+        <div>
+          <span class="block text-sm font-semibold">Couch to 5K Crew</span>
+          <span class="block text-xs text-offwhite-muted mt-1">Starting from zero? This is your crew. Celebrating every milestone, no matter how small.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          <span class="circle-type" style="background:rgba(200,255,0,0.12);color:var(--lime);">Interest</span>
+          <span class="text-xs text-offwhite-muted">1.8K members</span>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;">Join</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invite-only -->
+    <h2 class="font-display text-xl font-bold mb-4" style="color:var(--magenta);">Invite-only circles</h2>
+    <div class="flex flex-col gap-3">
+      <div class="circle-card" style="border-color:rgba(108,60,225,0.3);background:var(--surface-2);">
+        <div>
+          <span class="block text-sm font-semibold">Elite marathon build — Spring 2027</span>
+          <span class="block text-xs text-offwhite-muted mt-1">Sub-2:30 marathoners sharing build data, workouts, and race strategy. Coach-led with periodic AMAs.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          <span class="circle-type" style="background:rgba(108,60,225,0.15);color:var(--violet);">Invite-only</span>
+          <span class="text-xs text-offwhite-muted">64 members</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="text" placeholder="Code" style="width:80px;padding:8px;font-size:12px;">
+            <button class="btn btn-violet" style="padding:8px 12px;font-size:12px;">Enter</button>
+          </div>
+        </div>
+      </div>
+      <div class="circle-card" style="border-color:rgba(108,60,225,0.3);background:var(--surface-2);">
+        <div>
+          <span class="block text-sm font-semibold">Coaches' corner</span>
+          <span class="block text-xs text-offwhite-muted mt-1">A space for running coaches to share methodology, case studies, and mentorship. Credentialed coaches only.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          <span class="circle-type" style="background:rgba(108,60,225,0.15);color:var(--violet);">Invite-only</span>
+          <span class="text-xs text-offwhite-muted">128 members</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="text" placeholder="Code" style="width:80px;padding:8px;font-size:12px;">
+            <button class="btn btn-violet" style="padding:8px 12px;font-size:12px;">Enter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Stride — Built for every runner</p>
+  <div class="links"><a href="#">Races</a><a href="#">Resources</a><a href="/community">Community</a></div>
+</footer>
+
+</body>
+</html>

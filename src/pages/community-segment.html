@@ -1,0 +1,160 @@
+<!--
+  Data model extension for future database (Prisma schema):
+
+  model CommunitySpace {
+    id            String   @id @default(uuid())
+    name          String
+    slug          String   @unique
+    type          String   // segment | circle | pace_band
+    description   String?
+    parentSpaceId String?  // for nesting circles under segments
+    joinCode      String?  // for invite-based circles
+    paceBandMin   Float?   // min pace in min/mi for pace_band spaces
+    paceBandMax   Float?   // max pace in min/mi for pace_band spaces
+    memberCount   Int      @default(0)
+    createdAt     DateTime @default(now())
+  }
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stride — Community Segment</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav">
+      <a href="#">Races</a>
+      <a href="#">Resources</a>
+      <a href="/community" class="nav-active">Community</a>
+      <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main id="segment-app">
+<div class="container py-12">
+  <a href="/community" class="text-sm" style="color:var(--violet);text-decoration:underline;">← Back to community</a>
+  <div id="segment-content" class="mt-6"></div>
+</div>
+</main>
+
+<footer class="site-footer">
+  <p>Stride — Built for every runner</p>
+  <div class="links"><a href="#">Races</a><a href="#">Resources</a><a href="/community">Community</a></div>
+</footer>
+
+<script>
+(function() {
+  var SEGMENTS = {
+    "first-timer": {
+      label: "Your first race",
+      desc: "Never raced before? This is your space. Find training partners at your pace, share wins (no matter how small), and get advice from runners who remember what day one felt like.",
+      icon: "—",
+      accentColor: "var(--cobalt)",
+      memberCount: "2.4K",
+      recentActivity: [
+        { user: "Jamie L.", action: "completed their first 5K training run — 3.1 miles without stopping", time: "2 hours ago" },
+        { user: "Reyna M.", action: "asked about shin pain — got 8 responses from the community", time: "5 hours ago" },
+        { user: "Coach Mike", action: "posted: 'Your first race isn't about speed. It's about proving you can do hard things.'", time: "8 hours ago" },
+        { user: "Tanya W.", action: "just joined the segment. Welcome them!", time: "12 hours ago" },
+      ]
+    },
+    "returner": {
+      label: "Coming back",
+      desc: "Welcome back. This space is for runners returning after time off, injury, or life getting in the way. No judgment — just support and smart training advice.",
+      icon: "↻",
+      accentColor: "var(--violet)",
+      memberCount: "1.8K",
+      recentActivity: [
+        { user: "Carlos R.", action: "logged his first pain-free 4-miler since the knee injury. 8 weeks of patience paying off.", time: "1 hour ago" },
+        { user: "Nia K.", action: "asked: 'How do you mentally handle being slower than you used to be?' — 14 thoughtful replies", time: "4 hours ago" },
+        { user: "Dr. Patel", action: "posted a PT's guide to Achilles rehab for returning runners", time: "6 hours ago" },
+        { user: "Sam T.", action: "just joined after 3 years off. Show them some love.", time: "1 day ago" },
+      ]
+    },
+    "competitive": {
+      label: "Chasing a PR",
+      desc: "You've raced. You want to race faster. This space is for serious training talk — pace targets, periodization, fueling strategies, and race execution.",
+      icon: "⌬",
+      accentColor: "var(--magenta)",
+      memberCount: "3.1K",
+      recentActivity: [
+        { user: "Derek P.", action: "posted a race report: 2:58 marathon — a 12-minute PR at Chicago", time: "3 hours ago" },
+        { user: "Anna V.", action: "shared custom workout: 3x2mi at threshold with 90s recovery. 'This one humbled me.'", time: "6 hours ago" },
+        { user: "Coach Elena", action: "dropped a guide on carb periodization for marathon builds", time: "10 hours ago" },
+        { user: "Marcus J.", action: "asked: 'What's your go-to pre-race breakfast 3 hours out?' — 27 replies", time: "14 hours ago" },
+      ]
+    },
+    "trail": {
+      label: "On the trails",
+      desc: "Dirt, vert, and distance. This space is for trail runners — from fire-road first-timers to ultra veterans. Training that accounts for elevation, terrain, and the sheer joy of being out there.",
+      icon: "▲",
+      accentColor: "var(--lime)",
+      memberCount: "1.2K",
+      recentActivity: [
+        { user: "River K.", action: "logged a 22-mile training run with 4,800ft of vert on the PCT", time: "2 hours ago" },
+        { user: "Jenna M.", action: "asked: 'Best trail shoes for wet rock in the PNW?' — 11 gear recs", time: "5 hours ago" },
+        { user: "TrailDad", action: "posted a photo essay from the Leadville 100 training weekend", time: "9 hours ago" },
+        { user: "Luca F.", action: "just signed up for their first 50K. Drop them some encouragement.", time: "16 hours ago" },
+      ]
+    },
+  };
+
+  var path = window.location.pathname;
+  var slug = path.split("/").pop() || "first-timer";
+  var segment = SEGMENTS[slug] || SEGMENTS["first-timer"];
+
+  var container = document.getElementById("segment-content");
+
+  var header = '<div class="flex items-start gap-6 flex-wrap" style="margin-bottom:32px;">';
+  header += '<div style="width:64px;height:64px;border-radius:var(--radius);background:rgba(30,94,245,0.1);display:flex;align-items:center;justify-content:center;font-size:32px;color:' + segment.accentColor + ';">' + segment.icon + '</div>';
+  header += '<div style="flex:1;min-width:260px;">';
+  header += '<h1 class="font-display" style="font-size:40px;font-weight:900;letter-spacing:-0.03em;line-height:1.1;">' + segment.label + '</h1>';
+  header += '<p class="text-lg text-offwhite-muted mt-2 leading-relaxed">' + segment.desc + '</p>';
+  header += '<div class="flex gap-6 mt-3 text-sm">';
+  header += '<span style="color:' + segment.accentColor + ';font-weight:600;">' + segment.memberCount + ' members</span>';
+  header += '<span class="text-offwhite-muted">•</span>';
+  header += '<span class="text-offwhite-muted">Active daily</span>';
+  header += '</div></div></div>';
+  container.innerHTML = header;
+
+  // Pace spaces links
+  var paceLinks = '<div class="card-dark mb-8">';
+  paceLinks += '<h3 class="font-display text-lg font-bold" style="color:var(--violet);">Find runners at your pace</h3>';
+  paceLinks += '<p class="text-sm text-offwhite-muted mt-1 mb-4">Pace-based spaces where you can connect with runners at your effort level.</p>';
+  paceLinks += '<div class="flex flex-wrap gap-3">';
+  var paces = [
+    { slug: "sub-7", label: "Sub-7:00 /mi" },
+    { slug: "7-9", label: "7:00–9:00 /mi" },
+    { slug: "9-11", label: "9:00–11:00 /mi" },
+    { slug: "11-plus", label: "11:00+ /mi" },
+  ];
+  paces.forEach(function(p) {
+    paceLinks += '<a href="/community/pace/' + p.slug + '" class="btn btn-secondary" style="font-size:12px;padding:8px 16px;">' + p.label + '</a>';
+  });
+  paceLinks += '</div></div>';
+  container.innerHTML += paceLinks;
+
+  // Recent activity
+  var activity = '<div>';
+  activity += '<h2 class="font-display text-2xl font-bold mb-4">Recent activity</h2>';
+  segment.recentActivity.forEach(function(a) {
+    activity += '<div class="card-dark" style="margin-bottom:8px;padding:16px;">';
+    activity += '<span class="text-sm font-semibold">' + a.user + '</span> ';
+    activity += '<span class="text-sm text-offwhite-muted">' + a.action + '</span>';
+    activity += '<span class="block text-xs text-offwhite-dim mt-1">' + a.time + '</span>';
+    activity += '</div>';
+  });
+  activity += '</div>';
+  container.innerHTML += activity;
+})();
+</script>
+
+</body>
+</html>

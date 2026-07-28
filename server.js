@@ -5,26 +5,28 @@ const path = require("path");
 const PORT = 3000;
 const SITE_DIR = __dirname;
 
-const PAGES = {
-  "/": "home.html",
-  "/onboarding": "onboarding.html",
-  "/plan": "plan.html",
-};
-
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
   ".json": "application/json",
   ".svg": "image/svg+xml",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
 };
 
 function serveFile(res, filePath) {
   const ext = path.extname(filePath);
   const mime = MIME[ext] || "application/octet-stream";
   try {
-    const content = fs.readFileSync(filePath, "utf-8");
-    res.writeHead(200, { "Content-Type": mime });
+    const content = fs.readFileSync(filePath);
+    res.writeHead(200, {
+      "Content-Type": mime,
+      "Cache-Control": ext.match(/\.(jpg|jpeg|png|webp|svg|ico)$/) ? "public, max-age=86400" : "no-cache",
+    });
     res.end(content);
   } catch {
     res.writeHead(404, { "Content-Type": "text/plain" });
@@ -49,6 +51,43 @@ const server = http.createServer((req, res) => {
   // Static files (CSS, JS, images)
   if (pathname.startsWith("/static/")) {
     serveFile(res, path.join(SITE_DIR, "src", pathname));
+    return;
+  }
+
+  // Community routes
+  if (pathname === "/community") {
+    servePage(res, "community.html");
+    return;
+  }
+
+  if (pathname === "/community/circles") {
+    servePage(res, "community-circles.html");
+    return;
+  }
+
+  if (pathname.startsWith("/community/pace/")) {
+    servePage(res, "community-pace.html");
+    return;
+  }
+
+  if (pathname.startsWith("/community/")) {
+    servePage(res, "community-segment.html");
+    return;
+  }
+
+  // Plan PDF print view
+  if (pathname.startsWith("/plan/") && pathname.endsWith("/pdf")) {
+    servePage(res, "plan-pdf.html");
+    return;
+  }
+
+  // API: plan .ics download
+  if (pathname === "/api/plan.ics") {
+    res.writeHead(200, {
+      "Content-Type": "text/calendar; charset=utf-8",
+      "Content-Disposition": "attachment; filename=stride-roadmap.ics",
+    });
+    res.end("BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Stride//EN\r\nEND:VCALENDAR");
     return;
   }
 

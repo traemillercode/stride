@@ -12,7 +12,7 @@
   <div class="inner">
     <a href="/" class="site-logo">Stride</a>
     <nav class="site-nav">
-      <a href="#">Races</a><a href="#">Resources</a><a href="#">Community</a>
+      <a href="#">Races</a><a href="#">Resources</a><a href="/community">Community</a>
     </nav>
   </div>
 </header>
@@ -78,11 +78,135 @@
     return tr;
   }
 
+  function downloadPDF() {
+    var printDiv = document.createElement("div");
+    printDiv.id = "print-plan";
+    printDiv.style.display = "none";
+
+    var html = '';
+    html += '<div class="plan-print-header">';
+    html += '<span class="wordmark">Stride</span>';
+    html += '<p style="margin-top:8px;font-size:13px;color:#555;">Your ' + plan.totalWeeks + '-week training roadmap</p>';
+    html += '</div>';
+
+    html += '<div style="margin-bottom:24px;">';
+    html += '<h2 style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;">Runner summary</h2>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+    html += '<tr><td style="padding:4px 12px 4px 0;color:#555;">Path</td><td style="padding:4px 0;">' + plan.segment.replace(/_/g, " ") + '</td></tr>';
+    html += '<tr><td style="padding:4px 12px 4px 0;color:#555;">Weekly mileage</td><td style="padding:4px 0;">' + plan.weeklyMileage + ' mi</td></tr>';
+    html += '<tr><td style="padding:4px 12px 4px 0;color:#555;">Goal race</td><td style="padding:4px 0;">' + plan.goalDistance + '</td></tr>';
+    html += '<tr><td style="padding:4px 12px 4px 0;color:#555;">Race date</td><td style="padding:4px 0;">' + (plan.goalRaceDate || "TBD") + '</td></tr>';
+    html += '</table></div>';
+
+    html += '<div style="margin-bottom:24px;page-break-inside:avoid;">';
+    html += '<h2 style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;">Pace targets</h2>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:13px;border:1px solid #ccc;">';
+    html += '<thead><tr style="background:#f5f5f5;"><th style="padding:8px 12px;text-align:left;border-bottom:1px solid #ccc;">Training pace</th><th style="padding:8px 12px;text-align:left;border-bottom:1px solid #ccc;">Per mile</th><th style="padding:8px 12px;text-align:left;border-bottom:1px solid #ccc;">Feel</th></tr></thead>';
+    html += '<tbody>';
+    html += '<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;">Easy</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-family:monospace;">' + formatPace(plan.paces.easySecsPerMi) + '</td><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#555;">Conversational</td></tr>';
+    html += '<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;">Tempo</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-family:monospace;">' + formatPace(plan.paces.tempoSecsPerMi) + '</td><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#555;">Comfortably hard</td></tr>';
+    html += '<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;">Threshold</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-family:monospace;">' + formatPace(plan.paces.thresholdSecsPerMi) + '</td><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#555;">Lactate threshold</td></tr>';
+    html += '<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;">Long run</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-family:monospace;">' + formatPace(plan.paces.longRunSecsPerMi) + '</td><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#555;">Steady</td></tr>';
+    html += '<tr style="background:#fafafa;"><td style="padding:8px 12px;font-weight:700;">Race goal</td><td style="padding:8px 12px;font-family:monospace;font-weight:700;">' + formatPace(plan.paces.raceGoalSecsPerMi) + '</td><td style="padding:8px 12px;color:#555;">Finish: ' + formatDuration(plan.paces.predictedFinishTimeSecs) + '</td></tr>';
+    html += '</tbody></table></div>';
+
+    html += '<div class="page-break"></div>';
+    html += '<h2 style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:700;margin-bottom:12px;">Week-by-week schedule</h2>';
+    plan.weeks.forEach(function(week) {
+      html += '<div style="margin-bottom:16px;page-break-inside:avoid;">';
+      html += '<h3 style="font-size:14px;font-weight:700;margin-bottom:4px;">Week ' + week.weekNumber + ' \u2014 ' + week.phase + ' <span style="font-weight:400;color:#555;">(' + week.totalMileage + ' mi)</span></h3>';
+      html += '<table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #eee;">';
+      week.workouts.forEach(function(w) {
+        var detail = w.targetDistance ? w.targetDistance + ' mi' : (w.targetDuration ? w.targetDuration + ' min' : '\u2014');
+        html += '<tr><td style="padding:4px 8px;border-bottom:1px solid #f0f0f0;font-weight:600;">' + DAY_LABELS[w.dayOfWeek] + '</td><td style="padding:4px 8px;border-bottom:1px solid #f0f0f0;text-transform:capitalize;">' + w.type + '</td><td style="padding:4px 8px;border-bottom:1px solid #f0f0f0;">' + detail + '</td><td style="padding:4px 8px;border-bottom:1px solid #f0f0f0;color:#777;">' + (w.notes || '') + '</td></tr>';
+      });
+      html += '</table></div>';
+    });
+
+    html += '<div class="print-footer">Built with Stride \u00b7 ' + new Date().toLocaleDateString() + '</div>';
+
+    printDiv.innerHTML = html;
+    document.body.appendChild(printDiv);
+
+    var oldTitle = document.title;
+    document.title = 'Stride \u2014 ' + plan.totalWeeks + '-week roadmap';
+    window.print();
+    document.title = oldTitle;
+    document.body.removeChild(printDiv);
+  }
+
+  function downloadICS() {
+    var ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Stride//Roadmap//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+    ];
+
+    var startDate;
+    if (plan.goalRaceDate) {
+      var raceDate = new Date(plan.goalRaceDate + 'T00:00:00');
+      var totalDays = plan.totalWeeks * 7;
+      startDate = new Date(raceDate.getTime() - totalDays * 86400000);
+    } else {
+      startDate = new Date();
+    }
+    var dow = startDate.getDay();
+    var mondayOffset = dow === 0 ? -6 : 1 - dow;
+    startDate.setDate(startDate.getDate() + mondayOffset);
+
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+    function toICSDate(d) {
+      return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + 'T070000';
+    }
+    function toICSEndDate(d) {
+      return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + 'T080000';
+    }
+
+    plan.weeks.forEach(function(week) {
+      var weekStart = new Date(startDate.getTime() + (week.weekNumber - 1) * 7 * 86400000);
+      week.workouts.forEach(function(w) {
+        if (w.type === 'rest') return;
+        var eventDate = new Date(weekStart.getTime() + w.dayOfWeek * 86400000);
+        var uid = 'stride-w' + week.weekNumber + '-d' + w.dayOfWeek + '@stride';
+
+        var summary = w.type.charAt(0).toUpperCase() + w.type.slice(1) + ' run';
+        if (w.targetDistance) summary += ' (' + w.targetDistance + ' mi)';
+        else if (w.targetDuration) summary += ' (' + w.targetDuration + ' min)';
+
+        var description = 'Week ' + week.weekNumber + ' - ' + week.phase + '\\n';
+        if (w.notes) description += w.notes + '\\n';
+        if (w.targetDistance) description += 'Target: ' + w.targetDistance + ' mi';
+        else if (w.targetDuration) description += 'Target: ' + w.targetDuration + ' min';
+
+        ics.push('BEGIN:VEVENT');
+        ics.push('UID:' + uid);
+        ics.push('DTSTART:' + toICSDate(eventDate));
+        ics.push('DTEND:' + toICSEndDate(eventDate));
+        ics.push('SUMMARY:' + summary);
+        ics.push('DESCRIPTION:' + description);
+        ics.push('END:VEVENT');
+      });
+    });
+
+    ics.push('END:VCALENDAR');
+
+    var blob = new Blob([ics.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'stride-roadmap.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   function render() {
     var container = document.getElementById("plan-content");
     container.innerHTML = "";
 
-    // Summary header
     var summary = h("div", { className: "card-dark md:p-8" });
     summary.appendChild(h("h1", { className: "font-display text-3xl md:text-4xl", text: "Your " + plan.totalWeeks + "-week roadmap" }));
     var stats = h("div", { className: "mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" });
@@ -91,6 +215,14 @@
     stats.appendChild(statBox("Goal race", plan.goalDistance));
     stats.appendChild(statBox("Race date", plan.goalRaceDate || "TBD"));
     summary.appendChild(stats);
+
+    // Action buttons
+    var actions = h("div", { className: "plan-actions" });
+    var downloadBtn = h("button", { className: "btn btn-primary", text: "Download your plan", style: "padding:12px 24px;", onclick: downloadPDF });
+    var calBtn = h("button", { className: "btn btn-outline", text: "Sync to calendar", style: "padding:12px 24px;", onclick: downloadICS });
+    actions.appendChild(downloadBtn);
+    actions.appendChild(calBtn);
+    summary.appendChild(actions);
     container.appendChild(summary);
 
     // Pace targets

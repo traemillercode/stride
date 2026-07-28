@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stride — Pace Space</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav">
+      <a href="#">Races</a>
+      <a href="#">Resources</a>
+      <a href="/community" class="nav-active">Community</a>
+      <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main id="pace-app">
+<div class="container py-12">
+  <a href="/community" class="text-sm" style="color:var(--violet);text-decoration:underline;">← Back to community</a>
+  <div id="pace-content" class="mt-6"></div>
+</div>
+</main>
+
+<footer class="site-footer">
+  <p>Stride — Built for every runner</p>
+  <div class="links"><a href="#">Races</a><a href="#">Resources</a><a href="/community">Community</a></div>
+</footer>
+
+<script>
+(function() {
+  var PACE_BANDS = {
+    "sub-7": {
+      label: "Sub-7:00 /mi",
+      range: "< 7:00",
+      min: 0,
+      max: 7,
+      desc: "Competitive and elite runners. This space is for those pushing the edge — performance-focused training talk, race strategy, and the pursuit of speed.",
+      accentColor: "var(--cobalt)",
+      memberCount: "890",
+      activity: [
+        { user: "Erik S.", action: "posted splits from his 2:34 marathon tune-up: 5:52 avg pace for 20 miles", time: "1 hour ago" },
+        { user: "Coach T", action: "shared a threshold workout: 6x1 mile at 10K pace with 60s jog recovery", time: "4 hours ago" },
+        { user: "Leah P.", action: "asked: 'Favorite carbon-plated racer for narrow feet?' — 16 replies", time: "7 hours ago" },
+      ]
+    },
+    "7-9": {
+      label: "7:00–9:00 /mi",
+      range: "7:00 – 9:00",
+      min: 7,
+      max: 9,
+      desc: "Experienced and intermediate runners. You've put in the miles and you're chasing goals — whether that's a BQ, a sub-20 5K, or just getting faster every season.",
+      accentColor: "var(--violet)",
+      memberCount: "2.1K",
+      activity: [
+        { user: "Jordan R.", action: "logged a 14-mile long run at 7:55 pace in 90-degree heat. 'Not pretty but got it done.'", time: "2 hours ago" },
+        { user: "Sophia M.", action: "shared her sub-1:40 half marathon race plan with pacing splits", time: "5 hours ago" },
+        { user: "Dan W.", action: "asked: 'How do you handle speedwork during summer humidity?' — 23 replies", time: "9 hours ago" },
+      ]
+    },
+    "9-11": {
+      label: "9:00–11:00 /mi",
+      range: "9:00 – 11:00",
+      min: 9,
+      max: 11,
+      desc: "Building endurance and consistency. This is the heart of running — people showing up day after day, putting in the work, and getting stronger together.",
+      accentColor: "var(--magenta)",
+      memberCount: "3.4K",
+      activity: [
+        { user: "Rachel K.", action: "completed her first double-digit run — 10 miles at 10:15 pace", time: "1 hour ago" },
+        { user: "Mike D.", action: "asked: 'Heart rate zones seem off with my watch. Should I trust feel instead?'", time: "3 hours ago" },
+        { user: "Coach L.", action: "posted a guide on negative splitting for first-time half marathoners", time: "8 hours ago" },
+      ]
+    },
+    "11-plus": {
+      label: "11:00+ /mi",
+      range: "11:00+",
+      min: 11,
+      max: 99,
+      desc: "All paces welcome — run/walk friendly. This space is for anyone who's moving forward. No pace too slow, no distance too short. You're a runner.",
+      accentColor: "var(--lime)",
+      memberCount: "1.6K",
+      activity: [
+        { user: "Tanya G.", action: "finished her first 5K using run/walk intervals — 38:24 and smiling", time: "2 hours ago" },
+        { user: "Pat J.", action: "asked: 'Best shoes for heavier runners?' — 19 thoughtful recommendations", time: "5 hours ago" },
+        { user: "Coach Em", action: "posted: 'Comparison is the thief of joy. Your 13-minute mile counts just as much.'", time: "11 hours ago" },
+      ]
+    },
+  };
+
+  var path = window.location.pathname;
+  var slug = path.split("/").pop() || "sub-7";
+  var band = PACE_BANDS[slug] || PACE_BANDS["sub-7"];
+
+  var container = document.getElementById("pace-content");
+
+  var html = '';
+  html += '<div class="flex items-start gap-6 flex-wrap" style="margin-bottom:32px;">';
+  html += '<div class="pace-card" style="width:140px;height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;"><span class="pace-range" style="font-size:28px;">' + band.range + '</span><span class="text-xs text-offwhite-muted mt-2">per mile</span></div>';
+  html += '<div style="flex:1;min-width:260px;">';
+  html += '<h1 class="font-display" style="font-size:40px;font-weight:900;letter-spacing:-0.03em;line-height:1.1;">' + band.label + '</h1>';
+  html += '<p class="text-lg text-offwhite-muted mt-2 leading-relaxed">' + band.desc + '</p>';
+  html += '<div class="flex gap-6 mt-3 text-sm">';
+  html += '<span style="color:' + band.accentColor + ';font-weight:600;">' + band.memberCount + ' members</span>';
+  html += '<span class="text-offwhite-muted">•</span>';
+  html += '<span class="text-offwhite-muted">Active daily</span>';
+  html += '</div></div></div>';
+  container.innerHTML = html;
+
+  // Activity feed
+  var activity = '<div>';
+  activity += '<h2 class="font-display text-2xl font-bold mb-4">Recent activity</h2>';
+  band.activity.forEach(function(a) {
+    activity += '<div class="card-dark" style="margin-bottom:8px;padding:16px;">';
+    activity += '<span class="text-sm font-semibold">' + a.user + '</span> ';
+    activity += '<span class="text-sm text-offwhite-muted">' + a.action + '</span>';
+    activity += '<span class="block text-xs text-offwhite-dim mt-1">' + a.time + '</span>';
+    activity += '</div>';
+  });
+  activity += '</div>';
+  container.innerHTML += activity;
+})();
+</script>
+
+</body>
+</html>
