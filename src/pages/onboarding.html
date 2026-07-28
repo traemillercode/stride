@@ -64,7 +64,23 @@
     elevationGain: "",
     ultraDistance: null,
     yearsRunning: "",
+    // New onboarding depth fields
+    availableDays: [],
+    restDay: "Sunday",
+    longRunDay: "Weekend",
+    knowsEasyRunPace: null,
+    easyRunPace: "",
+    priorExperience: "",
+    hasRacedBefore: null,
+    priorRaceTime: { hours: "", minutes: "", seconds: "" },
+    priorRaceDistance: "",
+    recentBestDistance: "",
+    recentBestTime: { hours: "", minutes: "", seconds: "" },
+    longestTrail: "",
   };
+
+  var DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  var DAY_MAP = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
 
   var DISTANCES = ["5K", "10K", "Half Marathon", "Marathon", "Ultra"];
   var TRAIL_TYPES = ["Fire roads", "Single track", "Technical", "Mix"];
@@ -122,6 +138,28 @@
         style: { fontSize: "13px", padding: "10px 20px" },
         onclick: function() { onclick(val); },
         text: label,
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function dayToggleGroup(container, selectedDays, onchange) {
+    DAYS.forEach(function(day) {
+      var isActive = selectedDays.indexOf(day) !== -1;
+      var btn = h("button", {
+        type: "button",
+        className: "btn " + (isActive ? "btn-primary" : "btn-secondary"),
+        style: { fontSize: "12px", padding: "10px 12px", minWidth: "44px", borderRadius: "4px" },
+        onclick: function() {
+          var idx = state.availableDays.indexOf(day);
+          if (idx === -1) {
+            state.availableDays.push(day);
+          } else {
+            state.availableDays.splice(idx, 1);
+          }
+          onchange();
+        },
+        text: day.slice(0, 3),
       });
       container.appendChild(btn);
     });
@@ -209,9 +247,64 @@
         }
       }
       form.appendChild(g3);
-    }
 
-    if (state.step === 2) {
+      // ── Weekly availability (all segments) ──
+      var g4 = fieldGroup("Which days can you run?");
+      g4.appendChild(h("p", { className: "text-xs text-offwhite-muted mb-2", text: "Select at least three days" }));
+      var dayGrid = h("div", { className: "flex flex-wrap gap-2" });
+      dayToggleGroup(dayGrid, state.availableDays, function() { render(); });
+      g4.appendChild(dayGrid);
+      if (state.availableDays.length > 0 && state.availableDays.length < 3) {
+        g4.appendChild(h("p", { className: "text-sm mt-2", style: "color:var(--magenta);", text: "Pick at least three days to build a sustainable plan." }));
+      }
+      form.appendChild(g4);
+
+      var g5 = fieldGroup("Preferred rest day");
+      var restSel = h("select", { onchange: function(e) { state.restDay = e.target.value; render(); } });
+      DAYS.forEach(function(d) {
+        restSel.appendChild(h("option", { value: d, text: d }));
+      });
+      restSel.value = state.restDay;
+      g5.appendChild(restSel);
+      form.appendChild(g5);
+
+      var g6 = fieldGroup("Long run preference");
+      var lrGrid = h("div", { className: "flex gap-3" });
+      ["Weekend", "Weekday"].forEach(function(opt) {
+        var isActive = state.longRunDay === opt;
+        var btn = h("button", {
+          type: "button",
+          className: "btn " + (isActive ? "btn-primary" : "btn-secondary"),
+          style: { fontSize: "13px", padding: "10px 20px" },
+          onclick: function() { state.longRunDay = opt; render(); },
+          text: opt,
+        });
+        lrGrid.appendChild(btn);
+      });
+      g6.appendChild(lrGrid);
+      form.appendChild(g6);
+
+      // ── Easy-run pace (all segments) ──
+      var g7 = fieldGroup("Do you know your easy run pace?");
+      var erpBtns = h("div", { className: "flex gap-3" });
+      toggleYesNo(erpBtns, state.knowsEasyRunPace, function(v) { state.knowsEasyRunPace = v; if (!v) state.easyRunPace = ""; render(); });
+      g7.appendChild(erpBtns);
+      if (state.knowsEasyRunPace) {
+        var erpRow = h("div", { className: "flex items-center gap-2 mt-2" });
+        erpRow.appendChild(h("input", {
+          type: "text", value: state.easyRunPace, placeholder: "e.g. 10:30",
+          style: { width: "140px", textAlign: "center" },
+          oninput: function(e) { state.easyRunPace = e.target.value; },
+        }));
+        erpRow.appendChild(h("span", { className: "text-sm text-offwhite-muted", text: "minutes per mile" }));
+        g7.appendChild(erpRow);
+      } else if (state.knowsEasyRunPace === false) {
+        g7.appendChild(h("p", { className: "text-sm mt-2", style: "color:var(--offwhite-muted);", text: "A conversational pace \u2014 you could hold a full conversation while running. We\u2019ll calibrate this once you connect a watch." }));
+      }
+      form.appendChild(g7);
+      }
+
+      if (state.step === 2) {
       if (segSlug === "first-timer") {
         var g = fieldGroup("Have you done any running before?");
         var btns = h("div", { className: "flex gap-3" });
@@ -222,6 +315,10 @@
           var g2 = fieldGroup("What's motivating you to start?");
           g2.appendChild(h("textarea", { rows: "3", placeholder: "Optional — tell us what's driving you.", oninput: function(e) { state.motivation = e.target.value; } }));
           form.appendChild(g2);
+
+          var g2b = fieldGroup("How much running have you done?");
+          g2b.appendChild(h("textarea", { rows: "2", placeholder: "e.g. A few 5K run/walks, Couch to 5K week 4", oninput: function(e) { state.priorExperience = e.target.value; } }));
+          form.appendChild(g2b);
         }
       }
       if (segSlug === "returner") {
@@ -248,7 +345,25 @@
         var g4 = fieldGroup("What was your routine before the break?");
         g4.appendChild(h("textarea", { rows: "3", placeholder: "Optional — distances, frequency, paces...", oninput: function(e) { state.previousRoutine = e.target.value; } }));
         form.appendChild(g4);
-      }
+
+        // ── Prior race experience (returner-specific) ──
+        var g5r = fieldGroup("Have you raced this distance before?");
+        var g5rBtns = h("div", { className: "flex gap-3" });
+        toggleYesNo(g5rBtns, state.hasRacedBefore, function(v) { state.hasRacedBefore = v; if (!v) { state.priorRaceTime = { hours: "", minutes: "", seconds: "" }; state.priorRaceDistance = ""; } render(); });
+        g5r.appendChild(g5rBtns);
+        form.appendChild(g5r);
+        if (state.hasRacedBefore) {
+          var g5s = fieldGroup("What was your time? (hr : min : sec)");
+          var g5sRow = h("div", { className: "flex items-center gap-2" });
+          g5sRow.appendChild(timeInput(state.priorRaceTime.hours, function(v) { state.priorRaceTime.hours = v; }));
+          g5sRow.appendChild(h("span", { text: ":", style: { color: "var(--offwhite-muted)" } }));
+          g5sRow.appendChild(timeInput(state.priorRaceTime.minutes, function(v) { state.priorRaceTime.minutes = v; }));
+          g5sRow.appendChild(h("span", { text: ":", style: { color: "var(--offwhite-muted)" } }));
+          g5sRow.appendChild(timeInput(state.priorRaceTime.seconds, function(v) { state.priorRaceTime.seconds = v; }));
+          g5s.appendChild(g5sRow);
+          form.appendChild(g5s);
+        }
+        }
       if (segSlug === "competitive") {
         var g1 = fieldGroup("Recent race distance");
         var distGrid = h("div", { className: "grid grid-cols-3 sm:grid-cols-5 gap-2" });
@@ -278,7 +393,34 @@
         yrRow.appendChild(h("span", { className: "text-sm text-offwhite-muted", text: "years" }));
         g4.appendChild(yrRow);
         form.appendChild(g4);
-      }
+
+        // ── Goal time + recent best (competitive-specific) ──
+        var g5c = fieldGroup("Your goal finish time (hr : min : sec)");
+        var g5cRow = h("div", { className: "flex items-center gap-2" });
+        g5cRow.appendChild(timeInput(state.goalTime.hours, function(v) { state.goalTime.hours = v; }));
+        g5cRow.appendChild(h("span", { text: ":", style: { color: "var(--offwhite-muted)" } }));
+        g5cRow.appendChild(timeInput(state.goalTime.minutes, function(v) { state.goalTime.minutes = v; }));
+        g5cRow.appendChild(h("span", { text: ":", style: { color: "var(--offwhite-muted)" } }));
+        g5cRow.appendChild(timeInput(state.goalTime.seconds, function(v) { state.goalTime.seconds = v; }));
+        g5c.appendChild(g5cRow);
+        form.appendChild(g5c);
+
+        var g6c = fieldGroup("Your recent best at any distance");
+        var g6cDistGrid = h("div", { className: "grid grid-cols-3 sm:grid-cols-5 gap-2" });
+        toggleBtnGroup(g6cDistGrid, DISTANCES, state.recentBestDistance, function(d) { state.recentBestDistance = d; render(); });
+        g6c.appendChild(g6cDistGrid);
+        form.appendChild(g6c);
+        if (state.recentBestDistance) {
+          var g6cRow = h("div", { className: "flex items-center gap-2 mt-2" });
+          g6cRow.appendChild(timeInput(state.recentBestTime.hours, function(v) { state.recentBestTime.hours = v; }));
+          g6cRow.appendChild(h("span", { text: ":", style: { color: "var(--offwhite-muted)" } }));
+          g6cRow.appendChild(timeInput(state.recentBestTime.minutes, function(v) { state.recentBestTime.minutes = v; }));
+          g6cRow.appendChild(h("span", { text: ":", style: { color: "var(--offwhite-muted)" } }));
+          g6cRow.appendChild(timeInput(state.recentBestTime.seconds, function(v) { state.recentBestTime.seconds = v; }));
+          g6c.appendChild(g6cRow);
+          g6c.appendChild(h("span", { className: "text-xs text-offwhite-muted", text: "hr : min : sec" }));
+        }
+        }
       if (segSlug === "trail") {
         var g1 = fieldGroup("What type of trails do you run?");
         var grid = h("div", { className: "grid grid-cols-2 gap-3" });
@@ -295,7 +437,12 @@
         toggleYesNo(btns3, state.ultraDistance, function(v) { state.ultraDistance = v; render(); });
         g3.appendChild(btns3);
         form.appendChild(g3);
-      }
+
+        // ── Prior trail experience (trail-specific) ──
+        var g4t = fieldGroup("Longest trail run or race?");
+        g4t.appendChild(h("textarea", { rows: "2", placeholder: "e.g. 15 miles, 3:45 at Big Basin", oninput: function(e) { state.longestTrail = e.target.value; } }));
+        form.appendChild(g4t);
+        }
     }
 
     if (state.step === 3) {
@@ -313,17 +460,39 @@
       dl.appendChild(rr("Weekly mileage", state.weeklyMileage + " miles"));
       dl.appendChild(rr("Goal distance", state.goalDistance));
       dl.appendChild(rr("Race date", state.goalRaceDate || "Not set"));
+      if (state.availableDays.length) dl.appendChild(rr("Run days", state.availableDays.join(", ")));
+      dl.appendChild(rr("Rest day", state.restDay));
+      dl.appendChild(rr("Long run", state.longRunDay));
+      if (state.knowsEasyRunPace === true && state.easyRunPace) dl.appendChild(rr("Easy pace", state.easyRunPace + " /mi"));
       if (segSlug === "first-timer" && state.hasRunBefore !== null) dl.appendChild(rr("Run before", state.hasRunBefore ? "Yes" : "No"));
+      if (segSlug === "first-timer" && state.priorExperience) dl.appendChild(rr("Experience", state.priorExperience));
       if (segSlug === "returner" && state.timeOff) dl.appendChild(rr("Time off", state.timeOff));
       if (segSlug === "returner" && state.comingFromInjury !== null) dl.appendChild(rr("Coming from injury", state.comingFromInjury ? "Yes" : "No"));
+      if (segSlug === "returner" && state.hasRacedBefore !== null) dl.appendChild(rr("Raced before", state.hasRacedBefore ? "Yes" : "No"));
+      if (segSlug === "returner" && state.hasRacedBefore && (state.priorRaceTime.hours || state.priorRaceTime.minutes)) {
+        var prt = (state.priorRaceTime.hours || "0") + ":" + (state.priorRaceTime.minutes || "00") + ":" + (state.priorRaceTime.seconds || "00");
+        dl.appendChild(rr("Prior time", prt));
+      }
       if (segSlug === "competitive" && (state.currentPR.hours || state.currentPR.minutes)) {
         dl.appendChild(rr("Recent race distance", state.currentPRDistance || state.goalDistance));
         var pr = (state.currentPR.hours || "0") + ":" + (state.currentPR.minutes || "00") + ":" + (state.currentPR.seconds || "00");
         dl.appendChild(rr("Recent race time", pr));
       }
+      if (segSlug === "competitive" && (state.goalTime.hours || state.goalTime.minutes)) {
+        var gt = (state.goalTime.hours || "0") + ":" + (state.goalTime.minutes || "00") + ":" + (state.goalTime.seconds || "00");
+        dl.appendChild(rr("Goal time", gt));
+      }
+      if (segSlug === "competitive" && state.recentBestDistance) {
+        dl.appendChild(rr("Recent best distance", state.recentBestDistance));
+        if (state.recentBestTime.hours || state.recentBestTime.minutes) {
+          var rbt = (state.recentBestTime.hours || "0") + ":" + (state.recentBestTime.minutes || "00") + ":" + (state.recentBestTime.seconds || "00");
+          dl.appendChild(rr("Recent best time", rbt));
+        }
+      }
       if (segSlug === "competitive" && state.yearsRunning) dl.appendChild(rr("Years running", state.yearsRunning));
       if (segSlug === "trail") dl.appendChild(rr("Trail type", state.trailType));
       if (segSlug === "trail" && state.elevationGain) dl.appendChild(rr("Elevation gain", state.elevationGain + " ft"));
+      if (segSlug === "trail" && state.longestTrail) dl.appendChild(rr("Longest trail", state.longestTrail));
       review.appendChild(dl);
       form.appendChild(review);
     }
@@ -337,7 +506,13 @@
       nav.appendChild(h("div", {}));
     }
     if (state.step < state.totalSteps) {
-      var next = h("button", { type: "button", className: "btn btn-primary", text: "Continue", onclick: function() { state.step++; render(); } });
+      var next = h("button", { type: "button", className: "btn btn-primary", text: "Continue", onclick: function() {
+        if (state.step === 1 && state.availableDays.length < 3) {
+          render();
+          return;
+        }
+        state.step++; render();
+      } });
       nav.appendChild(next);
     } else {
       var submit = h("button", { type: "submit", className: "btn btn-primary", text: "Map my roadmap", style: { padding: "14px 32px" } });
@@ -356,6 +531,39 @@
       raceTimeSecs = hh * 3600 + mm * 60 + ss;
     }
 
+    var priorRaceTimeSecs;
+    if (state.priorRaceTime.hours || state.priorRaceTime.minutes || state.priorRaceTime.seconds) {
+      var ph = parseInt(state.priorRaceTime.hours) || 0;
+      var pm = parseInt(state.priorRaceTime.minutes) || 0;
+      var ps = parseInt(state.priorRaceTime.seconds) || 0;
+      priorRaceTimeSecs = ph * 3600 + pm * 60 + ps;
+    }
+
+    var goalTimeSecs;
+    if (state.goalTime.hours || state.goalTime.minutes || state.goalTime.seconds) {
+      var gh = parseInt(state.goalTime.hours) || 0;
+      var gm = parseInt(state.goalTime.minutes) || 0;
+      var gs = parseInt(state.goalTime.seconds) || 0;
+      goalTimeSecs = gh * 3600 + gm * 60 + gs;
+    }
+
+    var recentBestTimeSecs;
+    if (state.recentBestTime.hours || state.recentBestTime.minutes || state.recentBestTime.seconds) {
+      var rh = parseInt(state.recentBestTime.hours) || 0;
+      var rm = parseInt(state.recentBestTime.minutes) || 0;
+      var rs = parseInt(state.recentBestTime.seconds) || 0;
+      recentBestTimeSecs = rh * 3600 + rm * 60 + rs;
+    }
+
+    // Parse easyRunPace "mm:ss" to seconds per mile
+    var easyRunPaceSecs;
+    if (state.easyRunPace) {
+      var parts = state.easyRunPace.split(":");
+      if (parts.length === 2) {
+        easyRunPaceSecs = (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+      }
+    }
+
     var plan = buildPlan({
       segment: segKey,
       goalDistance: state.goalDistance,
@@ -365,6 +573,18 @@
       recentRaceDistance: raceTimeSecs ? (state.currentPRDistance || state.goalDistance) : undefined,
       injuryHistory: segSlug === "returner" && state.comingFromInjury ? state.injuryDescription : undefined,
       elevationGain: state.elevationGain || undefined,
+      // New onboarding depth options
+      availableDays: state.availableDays,
+      restDay: state.restDay,
+      longRunDay: state.longRunDay,
+      easyRunPaceSecs: easyRunPaceSecs || undefined,
+      priorRaceTimeSecs: priorRaceTimeSecs || undefined,
+      priorRaceDistance: priorRaceTimeSecs ? state.goalDistance : undefined,
+      goalTimeSecs: goalTimeSecs || undefined,
+      recentBestTimeSecs: recentBestTimeSecs || undefined,
+      recentBestDistance: recentBestTimeSecs ? state.recentBestDistance : undefined,
+      priorExperience: state.priorExperience || undefined,
+      longestTrail: state.longestTrail || undefined,
     });
 
     var planId = Date.now().toString(36);

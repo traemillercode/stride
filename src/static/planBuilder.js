@@ -2,6 +2,10 @@
    Builds periodized training plans for all segments and fitness levels.
    Handles first-timer through elite, with injury-aware adjustments. */
 
+var DAY_NAMES_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+var DAY_INDEX = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 };
+var DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
 var SEGMENT_WEEK_CONFIG = {
   FIRST_TIMER: { base: 6, build: 4, peak: 2, taper: 2 },
   RETURNER:   { base: 5, build: 4, peak: 2, taper: 2 },
@@ -84,7 +88,7 @@ function isElite(segment, weeklyMileage, goalDistance) {
 }
 
 /* Generate workouts for a week */
-function generateWorkouts(weekMileage, phase, isEliteTier, weeklyMileage, weekNumber, totalWeeks) {
+function generateWorkouts(weekMileage, phase, isEliteTier, weeklyMileage, weekNumber, totalWeeks, dayPrefs) {
   var workouts = [];
   var longRunPct = phase === "peak" ? 0.35 : phase === "taper" ? 0.20 : 0.28;
   var longRunDist = Math.round(weekMileage * longRunPct * 10) / 10;
@@ -102,6 +106,7 @@ function generateWorkouts(weekMileage, phase, isEliteTier, weeklyMileage, weekNu
 
   var easyDist = remaining > 0 ? Math.round((remaining / easyDays) * 10) / 10 : 0;
 
+  // Default day assignments (pre-remap)
   // Mon: Rest
   workouts.push({ dayOfWeek: 0, type: "rest" });
 
@@ -141,7 +146,120 @@ function generateWorkouts(weekMileage, phase, isEliteTier, weeklyMileage, weekNu
   // Sun: Recovery or rest
   workouts.push({ dayOfWeek: 6, type: "easy", targetDistance: easyDist * 0.6, targetDuration: null, notes: "Recovery jog or walk" });
 
+  // Apply day preferences if provided
+  if (dayPrefs && dayPrefs.availableDays && dayPrefs.availableDays.length >= 3) {
+    workouts = remapDays(workouts, dayPrefs);
+  }
+
   return workouts;
+}
+
+/* Remap workout days based on user preferences */
+function remapDays(workouts, dayPrefs) {
+  var availableDays = dayPrefs.availableDays || [];
+  var restDay = dayPrefs.restDay || "Sunday";
+  var longRunDay = dayPrefs.longRunDay || "Weekend";
+
+  // Convert available day names to indices
+  var availableIndices = [];
+  for (var i = 0; i < availableDays.length; i++) {
+    var idx = DAY_INDEX[availableDays[i]];
+    if (idx !== undefined) availableIndices.push(idx);
+  }
+  availableIndices.sort(function(a, b) { return a - b; });
+
+  // Determine rest day index
+  var restIdx = DAY_INDEX[restDay];
+  if (restIdx === undefined) restIdx = 6; // default Sunday
+
+  // Determine long run day: Sat (5) for Weekend, Wed (2) for Weekday
+  var longIdx = longRunDay === "Weekday" ? 2 : 5;
+
+  // If the preferred long run day isn't available, pick the closest available
+  if (availableIndices.indexOf(longIdx) === -1) {
+    // Find nearest available day to preferred long run day
+    var best = availableIndices[0];
+    var bestDist = Math.abs(longIdx - best);
+    for (var j = 1; j < availableIndices.length; j++) {
+      var dist = Math.abs(longIdx - availableIndices[j]);
+      if (dist < bestDist) { bestDist = dist; best = availableIndices[j]; }
+    }
+    longIdx = best;
+  }
+
+  // Strategy:
+  // 1. Place "long" workout on longIdx
+  // 2. Place "rest" workouts on restIdx (and any non-available days)
+  // 3. Distribute remaining workouts across available days in order
+  // 4. Mark non-available days as rest
+
+  // First, extract workout types in order (excluding rest days)
+  var nonRestWorkouts = [];
+  for (var k = 0; k < workouts.length; k++) {
+    if (workouts[k].type !== "rest") {
+      nonRestWorkouts.push(workouts[k]);
+    }
+  }
+
+  // Separate long run from others
+  var longWorkout = null;
+  var otherWorkouts = [];
+  for (var m = 0; m < nonRestWorkouts.length; m++) {
+    if (nonRestWorkouts[m].type === "long") {
+      longWorkout = nonRestWorkouts[m];
+    } else {
+      otherWorkouts.push(nonRestWorkouts[m]);
+    }
+  }
+
+  // Build new 7-day array, all rest by default
+  var remapped = [];
+  for (var d = 0; d < 7; d++) {
+    remapped.push({ dayOfWeek: d, type: "rest" });
+  }
+
+  // Place long run on longIdx
+  if (longWorkout && availableIndices.indexOf(longIdx) !== -1) {
+    remapped[longIdx] = { dayOfWeek: longIdx, type: longWorkout.type, targetDistance: longWorkout.targetDistance, targetDuration: longWorkout.targetDuration, notes: longWorkout.notes };
+  }
+
+  // Place remaining workouts on other available days (skip longIdx and restIdx if it's a rest)
+  var workoutIdx = 0;
+  for (var w = 0; w < availableIndices.length; w++) {
+    var dayIdx = availableIndices[w];
+    // Skip long run day and rest day
+    if (dayIdx === longIdx) continue;
+    if (dayIdx === restIdx) continue;
+    if (workoutIdx < otherWorkouts.length) {
+      var ow = otherWorkouts[workoutIdx];
+      remapped[dayIdx] = { dayOfWeek: dayIdx, type: ow.type, targetDistance: ow.targetDistance, targetDuration: ow.targetDuration, notes: ow.notes };
+      workoutIdx++;
+    } else {
+      // Extra available day with no workout assigned — fill with easy
+      remapped[dayIdx] = { dayOfWeek: dayIdx, type: "easy", targetDistance: null, targetDuration: null, notes: "Recovery — optional easy jog" };
+    }
+  }
+
+  // If we couldn't place all workouts (too few available days), try placing on already-used days
+  while (workoutIdx < otherWorkouts.length) {
+    // Place on the first available non-rest-day that isn't the long run day
+    var placed = false;
+    for (var p = 0; p < availableIndices.length; p++) {
+      var pIdx = availableIndices[p];
+      if (pIdx === restIdx) continue;
+      if (pIdx === longIdx) continue;
+      if (remapped[pIdx].type === "rest") {
+        var ow2 = otherWorkouts[workoutIdx];
+        remapped[pIdx] = { dayOfWeek: pIdx, type: ow2.type, targetDistance: ow2.targetDistance, targetDuration: ow2.targetDuration, notes: ow2.notes };
+        workoutIdx++;
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) break; // can't place more
+  }
+
+  return remapped;
 }
 
 /* Generate warnings based on plan inputs */
@@ -196,6 +314,17 @@ function buildPlan(options) {
     var injuryHistory = options.injuryHistory || undefined;
     var elevationGain = options.elevationGain || undefined;
 
+    // New onboarding depth options
+    var availableDays = options.availableDays || [];
+    var restDay = options.restDay || "Sunday";
+    var longRunDay = options.longRunDay || "Weekend";
+    var easyRunPaceSecs = options.easyRunPaceSecs || undefined;
+    var priorRaceTimeSecs = options.priorRaceTimeSecs || undefined;
+    var priorRaceDistance = options.priorRaceDistance || undefined;
+    var goalTimeSecs = options.goalTimeSecs || undefined;
+    var recentBestTimeSecs = options.recentBestTimeSecs || undefined;
+    var recentBestDistance = options.recentBestDistance || undefined;
+
     // Clamp mileage to 0-200
     weeklyMileage = Math.max(0, Math.min(200, weeklyMileage));
 
@@ -240,6 +369,16 @@ function buildPlan(options) {
       totalWeeks += weekConfig[phase];
     }
 
+    // Build day preferences object for workout placement
+    var dayPrefs = null;
+    if (availableDays.length >= 3) {
+      dayPrefs = {
+        availableDays: availableDays,
+        restDay: restDay,
+        longRunDay: longRunDay,
+      };
+    }
+
     // Build weeks
     var weeks = [];
     var weekNum = 1;
@@ -261,7 +400,7 @@ function buildPlan(options) {
         // Ensure minimum mileage
         if (m < 2 && weeklyMileage >= 2) m = 2;
 
-        var wkWorkouts = generateWorkouts(m, phase, elite, weeklyMileage, weekNum, totalWeeks);
+        var wkWorkouts = generateWorkouts(m, phase, elite, weeklyMileage, weekNum, totalWeeks, dayPrefs);
 
         weeks.push({
           weekNumber: weekNum,
@@ -273,8 +412,29 @@ function buildPlan(options) {
       }
     }
 
+    // Determine which race time to use for pace calculation
+    // Priority: priorRaceTimeSecs (returner) > recentRaceTimeSecs (competitive) > recentBestTimeSecs
+    var paceTime = priorRaceTimeSecs || recentRaceTimeSecs || recentBestTimeSecs;
+    var paceDist = priorRaceTimeSecs ? priorRaceDistance : recentRaceTimeSecs ? recentRaceDistance : recentBestTimeSecs ? recentBestDistance : undefined;
+
     // Compute paces
-    var paces = computePaces(recentRaceTimeSecs, recentRaceDistance, goalDistance);
+    var paces = computePaces(paceTime, paceDist, goalDistance);
+
+    // Override easy pace if user provided their own
+    if (easyRunPaceSecs && easyRunPaceSecs > 0) {
+      paces.easySecsPerMi = easyRunPaceSecs;
+      // Also adjust long run pace proportionally from easy pace (long run: ~15% faster than easy)
+      paces.longRunSecsPerMi = Math.round(easyRunPaceSecs * 0.85);
+    }
+
+    // If goalTimeSecs is provided, override raceGoalSecsPerMi
+    if (goalTimeSecs && goalTimeSecs > 0) {
+      var goalDistKm = DISTANCE_KM[goalDistance] || 5;
+      var goalDistMi = goalDistKm / 1.60934;
+      var goalPace = Math.round(goalTimeSecs / goalDistMi);
+      paces.raceGoalSecsPerMi = Math.max(210, Math.min(900, goalPace));
+      paces.predictedFinishTimeSecs = goalTimeSecs;
+    }
 
     // Generate warnings
     var warnings = generateWarnings(segment, weeklyMileage, goalDistance, goalRaceDate, injuryHistory, isReturner);
