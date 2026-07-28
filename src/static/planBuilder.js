@@ -1,153 +1,297 @@
-// Stride Plan Builder — browser-compatible
-const SEGMENT_WEEK_CONFIG = {
-  FIRST_TIMER: { base: 4, build: 4, peak: 2, taper: 2 },
-  RETURNER: { base: 4, build: 4, peak: 3, taper: 2 },
-  COMPETITIVE: { base: 4, build: 5, peak: 3, taper: 2 },
-  TRAIL: { base: 4, build: 4, peak: 3, taper: 2 },
+/* Stride — Plan Builder
+   Builds periodized training plans for all segments and fitness levels.
+   Handles first-timer through elite, with injury-aware adjustments. */
+
+var SEGMENT_WEEK_CONFIG = {
+  FIRST_TIMER: { base: 6, build: 4, peak: 2, taper: 2 },
+  RETURNER:   { base: 5, build: 4, peak: 2, taper: 2 },
+  COMPETITIVE:{ base: 4, build: 5, peak: 3, taper: 2 },
+  TRAIL:      { base: 5, build: 5, peak: 3, taper: 2 },
 };
 
-function mileageForWeek(phase, weekInPhase, totalPhaseWeeks, baseMileage, segment) {
-  const progress = totalPhaseWeeks > 1 ? weekInPhase / (totalPhaseWeeks - 1) : 0;
-  switch (phase) {
-    case "base":
-      return Math.round(baseMileage * (0.7 + 0.3 * progress));
-    case "build": {
-      const mult = segment === "COMPETITIVE" ? 1.4 : segment === "TRAIL" ? 1.25 : 1.3;
-      return Math.round(baseMileage * (1.0 + (mult - 1.0) * progress));
-    }
-    case "peak": {
-      const peakBase = segment === "COMPETITIVE" ? 1.4 : segment === "TRAIL" ? 1.25 : 1.3;
-      return Math.round(baseMileage * (peakBase - 0.05 + 0.05 * progress));
-    }
-    case "taper": {
-      const peakMileage = segment === "COMPETITIVE" ? 1.35 : segment === "TRAIL" ? 1.2 : 1.25;
-      return Math.round(baseMileage * (peakMileage - (peakMileage - 0.4) * progress));
-    }
-    default:
-      return baseMileage;
-  }
+var DISTANCE_TOTAL_WEEKS = {
+  "5K": 10,
+  "10K": 12,
+  "Half Marathon": 14,
+  "Marathon": 16,
+  "Ultra": 18,
+};
+
+var ELITE_DISTANCES = ["Half Marathon", "Marathon", "Ultra"];
+
+function getPhaseBg(phase) {
+  var map = {
+    base: "", build: "", peak: "", taper: "",
+  };
+  return map[phase] || "";
 }
 
-function generateWorkoutsForWeek(weekMileage, phase, weekInPhase, paces, segment) {
-  const workouts = [];
-  const daysPerWeek = segment === "FIRST_TIMER" ? 4 : segment === "COMPETITIVE" ? 6 : 5;
-  const longRunPct = 0.3, tempoPct = 0.2, thresholdPct = 0.18, easyRunPct = 0.08;
+function getPhaseColor(phase) {
+  var map = {
+    base: "text-cobalt", build: "text-violet", peak: "text-magenta", taper: "text-lime",
+  };
+  return map[phase] || "text-cobalt";
+}
 
-  const runningDays = [];
+function getWorkoutClass(type) {
+  var map = {
+    easy: "badge-easy", tempo: "badge-tempo", long: "badge-long",
+    rest: "badge-rest", strength: "badge-strength", cross: "badge-cross",
+    mobility: "badge-mobility", interval: "badge-tempo", threshold: "badge-tempo",
+    vo2max: "badge-tempo",
+  };
+  return map[type] || "";
+}
+
+/* Calculate target mileage for a given week within a phase.
+   Handles weeklyMileage up to 200 without producing absurd numbers. */
+function mileageForWeek(weeklyMileage, weekIndex, totalWeeks, phase, phaseWeeks, phaseIndex) {
   if (phase === "taper") {
-    runningDays.push("easy", "tempo", "easy", "long");
-  } else if (phase === "peak" || phase === "build") {
-    if (daysPerWeek >= 6) runningDays.push("easy", "tempo", "easy", "threshold", "rest", "long");
-    else runningDays.push("easy", "tempo", "easy", "long", "rest");
+    // Taper: progressively reduce to 50-60% of peak
+    var taperProgress = weekIndex / (phaseWeeks - 1 || 1);
+    var taperFactor = 1 - (0.4 * taperProgress);
+    return Math.round(weeklyMileage * Math.min(1.15, 1 + 0.05 * (totalWeeks / 4)) * taperFactor);
+  }
+
+  if (phase === "base") {
+    // Base: ramp from ~50% to ~85% of peak
+    var baseProgress = (weekIndex + 1) / phaseWeeks;
+    var baseFactor = 0.5 + (0.4 * baseProgress);
+    return Math.round(weeklyMileage * baseFactor);
+  }
+
+  if (phase === "build") {
+    // Build: 85% to 115% of base weekly mileage
+    var buildProgress = weekIndex / (phaseWeeks - 1 || 1);
+    var buildFactor = 0.85 + (0.3 * buildProgress);
+    return Math.round(weeklyMileage * buildFactor);
+  }
+
+  if (phase === "peak") {
+    // Peak: 110-115% of base — hard weeks
+    var peakFactor = 1.1 + (weekIndex % 2 === 0 ? 0.05 : 0);
+    return Math.round(weeklyMileage * peakFactor);
+  }
+
+  return Math.round(weeklyMileage);
+}
+
+/* Determine if this is an elite-tier athlete */
+function isElite(segment, weeklyMileage, goalDistance) {
+  return segment === "COMPETITIVE" &&
+         weeklyMileage >= 70 &&
+         ELITE_DISTANCES.indexOf(goalDistance) !== -1;
+}
+
+/* Generate workouts for a week */
+function generateWorkouts(weekMileage, phase, isEliteTier, weeklyMileage, weekNumber, totalWeeks) {
+  var workouts = [];
+  var longRunPct = phase === "peak" ? 0.35 : phase === "taper" ? 0.20 : 0.28;
+  var longRunDist = Math.round(weekMileage * longRunPct * 10) / 10;
+
+  // Cap long run at 22 miles (reasonable max)
+  if (longRunDist > 22) longRunDist = 22;
+  if (longRunDist < 1) longRunDist = 1;
+
+  // Distribute remaining mileage across easy/tempo days
+  var remaining = weekMileage - longRunDist;
+  var easyDays = phase === "peak" ? 3 : phase === "taper" ? 3 : 4;
+
+  if (phase === "taper") easyDays = 2;
+  if (phase === "base") easyDays = 4;
+
+  var easyDist = remaining > 0 ? Math.round((remaining / easyDays) * 10) / 10 : 0;
+
+  // Mon: Rest
+  workouts.push({ dayOfWeek: 0, type: "rest" });
+
+  // Tue: Easy or quality (elite gets intervals)
+  if (isEliteTier && (phase === "build" || phase === "peak") && weekNumber % 2 === 0) {
+    workouts.push({ dayOfWeek: 1, type: "interval", targetDistance: easyDist, targetDuration: null, notes: "VO2 max intervals: 5x1000m at 5K pace with 90s jog recovery" });
+  } else if (isEliteTier && phase === "build" && weekNumber % 2 === 1) {
+    workouts.push({ dayOfWeek: 1, type: "threshold", targetDistance: easyDist, targetDuration: null, notes: "Threshold: 4x1.5mi at threshold pace with 60s rest" });
   } else {
-    runningDays.push("easy", "easy", "tempo", "easy", "long");
+    workouts.push({ dayOfWeek: 1, type: "easy", targetDistance: easyDist, targetDuration: null, notes: "Recovery pace, conversational" });
   }
 
-  while (runningDays.length < 7) {
-    if (runningDays.length >= daysPerWeek) runningDays.push("rest");
-    else if (segment === "TRAIL" && !runningDays.includes("cross")) runningDays.push("cross");
-    else if (!runningDays.includes("strength") && weekInPhase > 1) runningDays.push("strength");
-    else runningDays.push("rest");
-  }
+  // Wed: Easy or quality
+  workouts.push({ dayOfWeek: 2, type: "easy", targetDistance: easyDist, targetDuration: null, notes: "Steady, conversational pace" });
 
-  const finalDays = runningDays.slice(0, 7);
-
-  finalDays.forEach(function(type, idx) {
-    let targetDistance = null, targetDuration = null, notes = null;
-    switch (type) {
-      case "long":
-        targetDistance = Math.round(weekMileage * longRunPct * 10) / 10;
-        targetDuration = Math.round(targetDistance * (paces.longRunSecsPerMi / 60));
-        notes = "steady effort, conversational pace";
-        break;
-      case "tempo":
-        targetDistance = Math.round(weekMileage * tempoPct * 10) / 10;
-        targetDuration = Math.round(targetDistance * (paces.tempoSecsPerMi / 60));
-        notes = "comfortably hard — could hold for an hour";
-        break;
-      case "threshold":
-        targetDistance = Math.round(weekMileage * thresholdPct * 10) / 10;
-        targetDuration = Math.round(targetDistance * (paces.thresholdSecsPerMi / 60));
-        notes = "lactate threshold effort — controlled but fast";
-        break;
-      case "easy":
-        targetDistance = Math.round(weekMileage * easyRunPct * 10) / 10;
-        targetDuration = Math.round(targetDistance * (paces.easySecsPerMi / 60));
-        notes = "conversational — should feel almost too easy";
-        break;
-      case "rest":
-        notes = "full rest or gentle walk";
-        break;
-      case "strength":
-        targetDuration = 30;
-        notes = "bodyweight or light weights, core focus";
-        break;
-      case "cross":
-        targetDuration = 40;
-        notes = "bike, swim, or hike — low impact";
-        break;
-      case "mobility":
-        targetDuration = 20;
-        notes = "foam rolling, dynamic stretches, yoga";
-        break;
+  // Thu: Quality day — tempo or threshold
+  if (phase === "build" || phase === "peak") {
+    if (isEliteTier && weekNumber % 2 === 0) {
+      workouts.push({ dayOfWeek: 3, type: "threshold", targetDistance: easyDist, targetDuration: null, notes: "Threshold: 3x2mi at threshold pace" });
+    } else {
+      workouts.push({ dayOfWeek: 3, type: "tempo", targetDistance: easyDist, targetDuration: null, notes: "Tempo effort — comfortably hard, could hold for an hour" });
     }
-    workouts.push({
-      dayOfWeek: idx,
-      type: type,
-      targetDistance: targetDistance && targetDistance > 0 ? targetDistance : null,
-      targetDuration: targetDuration,
-      notes: notes,
-    });
-  });
+  } else {
+    workouts.push({ dayOfWeek: 3, type: "easy", targetDistance: easyDist, targetDuration: null, notes: "Recovery pace" });
+  }
+
+  // Fri: Rest or cross
+  if (isEliteTier && phase !== "taper") {
+    workouts.push({ dayOfWeek: 4, type: "easy", targetDistance: easyDist * 0.8, targetDuration: null, notes: "Shakeout — very easy" });
+  } else {
+    workouts.push({ dayOfWeek: 4, type: "rest" });
+  }
+
+  // Sat: Long run
+  workouts.push({ dayOfWeek: 5, type: "long", targetDistance: longRunDist, targetDuration: null, notes: "Long run — steady, negative split if feeling good" });
+
+  // Sun: Recovery or rest
+  workouts.push({ dayOfWeek: 6, type: "easy", targetDistance: easyDist * 0.6, targetDuration: null, notes: "Recovery jog or walk" });
 
   return workouts;
 }
 
-function buildPlan(input) {
-  const paces = calculatePaces(input);
-  const weekConfig = SEGMENT_WEEK_CONFIG[input.segment] || SEGMENT_WEEK_CONFIG.FIRST_TIMER;
-  const totalWeeks = weekConfig.base + weekConfig.build + weekConfig.peak + weekConfig.taper;
-  const weeks = [];
-  const phases = ["base", "build", "peak", "taper"];
-  let weekNum = 1;
+/* Generate warnings based on plan inputs */
+function generateWarnings(segment, weeklyMileage, goalDistance, goalRaceDate, injuryHistory, isReturner) {
+  var warnings = [];
 
-  phases.forEach(function(phase) {
-    const phaseWeeks = weekConfig[phase];
-    for (let w = 0; w < phaseWeeks; w++) {
-      const mileage = mileageForWeek(phase, w, phaseWeeks, input.weeklyMileage, input.segment);
-      const workouts = generateWorkoutsForWeek(mileage, phase, w, paces, input.segment);
-      weeks.push({ weekNumber: weekNum, phase: phase, totalMileage: mileage, workouts: workouts });
-      weekNum++;
+  // Mileage/goal mismatch: aggressive timeline
+  if (weeklyMileage < 10 && (goalDistance === "Marathon" || goalDistance === "Ultra")) {
+    var weeksUntilRace = Infinity;
+    if (goalRaceDate) {
+      var raceDate = new Date(goalRaceDate + "T00:00:00");
+      var now = new Date();
+      weeksUntilRace = Math.floor((raceDate - now) / (7 * 86400000));
     }
-  });
+    if (weeksUntilRace < 12) {
+      warnings.push("This timeline is aggressive for your current mileage. Consider a shorter race or a longer training window.");
+    }
+  }
 
-  return {
-    segment: input.segment,
-    goalDistance: input.goalDistance,
-    goalRaceDate: input.goalRaceDate,
-    weeklyMileage: input.weeklyMileage,
-    paces: paces,
-    weeks: weeks,
-    totalWeeks: totalWeeks,
-  };
+  // Very low mileage
+  if (weeklyMileage < 5) {
+    warnings.push("Building from very low mileage — expect a conservative ramp. Consistency matters more than distance right now.");
+  }
+
+  // Past date
+  if (goalRaceDate) {
+    var rd = new Date(goalRaceDate + "T00:00:00");
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (rd < today) {
+      warnings.push("This plan is based on the date you entered, which has already passed. Adjust your race date for an accurate timeline.");
+    }
+  }
+
+  // Injury history for returners
+  if (isReturner && injuryHistory) {
+    warnings.push("Injury history noted — week 1 mileage reduced by 30% and base phase extended to ease you back safely.");
+  }
+
+  return warnings;
 }
 
-function getPhaseColor(phase) {
-  const map = { base: "text-cobalt", build: "text-violet", peak: "text-magenta", taper: "text-lime" };
-  return map[phase] || "";
-}
+/* Main plan builder */
+function buildPlan(options) {
+  try {
+    var segment = options.segment || "FIRST_TIMER";
+    var goalDistance = options.goalDistance || "5K";
+    var goalRaceDate = options.goalRaceDate || "";
+    var weeklyMileage = parseInt(options.weeklyMileage) || 10;
+    var recentRaceTimeSecs = options.recentRaceTimeSecs || undefined;
+    var recentRaceDistance = options.recentRaceDistance || undefined;
+    var injuryHistory = options.injuryHistory || undefined;
+    var elevationGain = options.elevationGain || undefined;
 
-function getPhaseBg(phase) {
-  const map = { base: "border-l-cobalt", build: "border-l-violet", peak: "border-l-magenta", taper: "border-l-lime" };
-  return map[phase] || "";
-}
+    // Clamp mileage to 0-200
+    weeklyMileage = Math.max(0, Math.min(200, weeklyMileage));
 
-function getWorkoutClass(type) {
-  const map = {
-    easy: "badge-easy", tempo: "badge-tempo", long: "badge-long",
-    rest: "badge-rest", strength: "badge-strength", cross: "badge-cross", mobility: "badge-mobility",
-  };
-  return map[type] || "badge-rest";
-}
+    // Is this a returner with injury?
+    var isReturner = segment === "RETURNER";
+    var hasInjury = isReturner && injuryHistory;
 
-var DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    // Get week config
+    var weekConfig = SEGMENT_WEEK_CONFIG[segment] || SEGMENT_WEEK_CONFIG["FIRST_TIMER"];
+
+    // Adjust for injury: extend base by 1 week
+    if (hasInjury) {
+      weekConfig = {
+        base: weekConfig.base + 1,
+        build: weekConfig.build,
+        peak: weekConfig.peak,
+        taper: weekConfig.taper,
+      };
+    }
+
+    // No goal race? Build a base-building plan (no taper)
+    var hasRaceDate = !!goalRaceDate;
+    if (!hasRaceDate) {
+      weekConfig = { base: 6, build: 4, peak: 2, taper: 0 };
+    }
+
+    // Past date? Still generate, but note it
+    var pastDate = false;
+    if (goalRaceDate) {
+      var rd = new Date(goalRaceDate + "T00:00:00");
+      var today = new Date();
+      today.setHours(0, 0, 0, 0);
+      pastDate = rd < today;
+    }
+
+    // Elite tier detection
+    var elite = isElite(segment, weeklyMileage, goalDistance);
+
+    // Calculate total weeks
+    var totalWeeks = 0;
+    for (var phase in weekConfig) {
+      totalWeeks += weekConfig[phase];
+    }
+
+    // Build weeks
+    var weeks = [];
+    var weekNum = 1;
+    var phases = ["base", "build", "peak", "taper"];
+
+    for (var pi = 0; pi < phases.length; pi++) {
+      var phase = phases[pi];
+      var phaseWeekCount = weekConfig[phase];
+      if (phaseWeekCount <= 0) continue;
+
+      for (var wi = 0; wi < phaseWeekCount; wi++) {
+        var m = mileageForWeek(weeklyMileage, wi, totalWeeks, phase, phaseWeekCount, pi);
+
+        // Injury adjustment: reduce week 1 mileage by 30%
+        if (hasInjury && weekNum === 1) {
+          m = Math.round(m * 0.7);
+        }
+
+        // Ensure minimum mileage
+        if (m < 2 && weeklyMileage >= 2) m = 2;
+
+        var wkWorkouts = generateWorkouts(m, phase, elite, weeklyMileage, weekNum, totalWeeks);
+
+        weeks.push({
+          weekNumber: weekNum,
+          phase: phase,
+          totalMileage: m,
+          workouts: wkWorkouts,
+        });
+        weekNum++;
+      }
+    }
+
+    // Compute paces
+    var paces = computePaces(recentRaceTimeSecs, recentRaceDistance, goalDistance);
+
+    // Generate warnings
+    var warnings = generateWarnings(segment, weeklyMileage, goalDistance, goalRaceDate, injuryHistory, isReturner);
+
+    return {
+      segment: segment,
+      goalDistance: goalDistance,
+      goalRaceDate: goalRaceDate,
+      weeklyMileage: weeklyMileage,
+      totalWeeks: weeks.length,
+      weeks: weeks,
+      paces: paces,
+      warnings: warnings,
+      isElite: elite,
+      pastDate: pastDate,
+    };
+  } catch (e) {
+    return { error: true, message: "Something went wrong building your plan. Try again." };
+  }
+}

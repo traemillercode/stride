@@ -622,3 +622,107 @@ label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
 /* ── Max-width utilities ── */
 .max-w-xs { max-width: 320px; }
 .max-w-sm { max-width: 384px; }
+
+/* ── Loading spinner ── */
+.loading-spinner {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border-visible);
+  border-top-color: var(--cobalt);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Skeleton loading ── */
+.skeleton-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.skeleton-line {
+  height: 12px;
+  background: var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.skeleton-line:last-child { width: 60%; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Moderation ── */
+.mod-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+.mod-link {
+  font-size: 11px;
+  color: var(--offwhite-dim);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+}
+.mod-link:hover { color: var(--offwhite-muted); text-decoration: underline; }
+
+.mod-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.mod-dialog {
+  background: var(--surface-2);
+  border: 1px solid var(--border-visible);
+  border-radius: var(--radius);
+  padding: 28px;
+  max-width: 420px;
+  width: 90%;
+}
+.mod-dialog select,
+.mod-dialog textarea {
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+.mod-dialog .mod-dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+/* ── Confirmation toast ── */
+.mod-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-3);
+  border: 1px solid var(--border-visible);
+  border-radius: var(--radius);
+  padding: 12px 24px;
+  font-size: 13px;
+  color: var(--offwhite);
+  z-index: 1001;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}

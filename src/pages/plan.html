@@ -35,13 +35,32 @@
   var path = window.location.pathname;
   var planId = path.split("/").pop();
   var raw = sessionStorage.getItem("plan-" + planId);
+  var container = document.getElementById("plan-content");
 
   if (!raw) {
-    document.getElementById("plan-content").innerHTML = '<div style="text-align:center;padding:80px 0;"><p class="text-offwhite-muted">No roadmap found. <a href="/" style="color:var(--cobalt);text-decoration:underline;">Start fresh</a>.</p></div>';
+    container.innerHTML = '<div style="text-align:center;padding:80px 0;"><p class="text-offwhite-muted">No roadmap found. <a href="/" style="color:var(--cobalt);text-decoration:underline;">Start fresh</a>.</p></div>';
     return;
   }
 
-  var plan = JSON.parse(raw);
+  var plan;
+  try {
+    plan = JSON.parse(raw);
+  } catch(e) {
+    container.innerHTML = '<div style="text-align:center;padding:80px 0;"><p class="text-offwhite-muted">Something went wrong loading your plan. <a href="/" style="color:var(--cobalt);text-decoration:underline;">Start fresh</a>.</p></div>';
+    return;
+  }
+
+  if (plan.error) {
+    container.innerHTML = '<div style="text-align:center;padding:80px 0;"><p class="text-offwhite-muted">' + (plan.message || "Something went wrong building your plan. Try again.") + ' <a href="/" style="color:var(--cobalt);text-decoration:underline;">Start fresh</a>.</p></div>';
+    return;
+  }
+
+  // Show loading spinner briefly
+  container.innerHTML = '<div class="loading-plan" style="text-align:center;padding:100px 0;"><div class="loading-spinner"></div><p class="text-offwhite-muted mt-4">Building your roadmap...</p></div>';
+
+  setTimeout(function() {
+    renderPlan(plan);
+  }, 500);
 
   function h(tag, attrs, children) {
     var el = document.createElement(tag);
@@ -203,12 +222,29 @@
     URL.revokeObjectURL(url);
   }
 
-  function render() {
-    var container = document.getElementById("plan-content");
+  function renderPlan(plan) {
     container.innerHTML = "";
 
+    // Warnings
+    if (plan.warnings && plan.warnings.length > 0) {
+      var warnDiv = h("div", { style: "margin-bottom:24px;" });
+      plan.warnings.forEach(function(w) {
+        var banner = h("div", { className: "card-dark", style: "border-left:4px solid var(--violet);padding:14px 20px;margin-bottom:8px;" });
+        banner.appendChild(h("p", { className: "text-sm", style: "color:var(--violet);", text: w }));
+        warnDiv.appendChild(banner);
+      });
+      container.appendChild(warnDiv);
+    }
+
     var summary = h("div", { className: "card-dark md:p-8" });
-    summary.appendChild(h("h1", { className: "font-display text-3xl md:text-4xl", text: "Your " + plan.totalWeeks + "-week roadmap" }));
+    var titleText = plan.totalWeeks > 0 ? "Your " + plan.totalWeeks + "-week roadmap" : "Your roadmap";
+    summary.appendChild(h("h1", { className: "font-display text-3xl md:text-4xl", text: titleText }));
+
+    if (plan.isElite) {
+      var eliteBadge = h("span", { className: "text-xs font-semibold", style: "background:rgba(200,255,0,0.12);color:var(--lime);border:1px solid rgba(200,255,0,0.25);border-radius:var(--radius);padding:4px 12px;margin-left:12px;", text: "Elite tier" });
+      titleText && summary.appendChild(eliteBadge);
+    }
+
     var stats = h("div", { className: "mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" });
     stats.appendChild(statBox("Path", plan.segment.replace(/_/g, " ")));
     stats.appendChild(statBox("Weekly mileage", plan.weeklyMileage + " mi"));
@@ -224,6 +260,15 @@
     actions.appendChild(calBtn);
     summary.appendChild(actions);
     container.appendChild(summary);
+
+    // Empty plan state
+    if (!plan.weeks || plan.weeks.length === 0) {
+      var emptyDiv = h("div", { className: "mt-10 text-center", style: "padding:60px 0;" });
+      emptyDiv.appendChild(h("p", { className: "text-offwhite-muted", text: "We couldn't build a plan with the information provided. Try adjusting your inputs." }));
+      emptyDiv.appendChild(h("a", { className: "btn btn-primary mt-6", href: "/", text: "Start over" }));
+      container.appendChild(emptyDiv);
+      return;
+    }
 
     // Pace targets
     var paceSection = h("div", { className: "mt-10" });
@@ -303,7 +348,12 @@
     container.appendChild(note);
   }
 
-  render();
+  // Fallback: if JS failed to load for community, show plain HTML
+  window.addEventListener("error", function(e) {
+    if (e.target === window) {
+      container.innerHTML = '<div style="text-align:center;padding:80px 0;"><p class="text-offwhite-muted">Something went wrong. <a href="/" style="color:var(--cobalt);text-decoration:underline;">Go back</a> to try again.</p></div>';
+    }
+  });
 })();
 </script>
 

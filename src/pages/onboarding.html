@@ -57,11 +57,13 @@
     injuryDescription: "",
     previousRoutine: "",
     currentPR: { hours: "", minutes: "", seconds: "" },
+    currentPRDistance: "",
     goalTime: { hours: "", minutes: "", seconds: "" },
     trainingDays: "5",
     trailType: "Mix",
     elevationGain: "",
     ultraDistance: null,
+    yearsRunning: "",
   };
 
   var DISTANCES = ["5K", "10K", "Half Marathon", "Marathon", "Ultra"];
@@ -177,12 +179,15 @@
       // Weekly mileage
       var g1 = fieldGroup("Current weekly mileage");
       var rangeRow = h("div", { className: "flex items-center gap-4" });
-      var slider = h("input", { type: "range", min: "0", max: "80", value: String(state.weeklyMileage), style: { flex: "1" },
+      var slider = h("input", { type: "range", min: "0", max: "200", value: String(state.weeklyMileage), style: { flex: "1" },
         oninput: function(e) { state.weeklyMileage = parseInt(e.target.value); render(); } });
-      var val = h("span", { className: "font-display text-2xl text-cobalt", text: String(state.weeklyMileage), style: { width: "50px", textAlign: "right", fontWeight: "700" } });
+      var val = h("span", { className: "font-display text-2xl text-cobalt", text: String(state.weeklyMileage), style: { minWidth: "60px", textAlign: "right", fontWeight: "700" } });
       rangeRow.appendChild(slider); rangeRow.appendChild(val);
       g1.appendChild(rangeRow);
       g1.appendChild(h("p", { className: "text-xs text-offwhite-muted mt-1", text: "miles per week" }));
+      if (state.weeklyMileage > 150) {
+        g1.appendChild(h("p", { className: "text-sm mt-2", style: "color:var(--violet);", text: "That's a big week — just confirming that's accurate" }));
+      }
       form.appendChild(g1);
 
       // Goal distance
@@ -194,7 +199,15 @@
 
       // Race date
       var g3 = fieldGroup("Goal race date");
-      g3.appendChild(h("input", { type: "date", value: state.goalRaceDate, oninput: function(e) { state.goalRaceDate = e.target.value; } }));
+      g3.appendChild(h("input", { type: "date", value: state.goalRaceDate, oninput: function(e) { state.goalRaceDate = e.target.value; render(); } }));
+      if (state.goalRaceDate) {
+        var rd = new Date(state.goalRaceDate + "T00:00:00");
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (rd < today) {
+          g3.appendChild(h("p", { className: "text-sm mt-2", style: "color:var(--magenta);", text: "This date is in the past. Training plans work best with a future race date." }));
+        }
+      }
       form.appendChild(g3);
     }
 
@@ -237,22 +250,34 @@
         form.appendChild(g4);
       }
       if (segSlug === "competitive") {
-        var g1 = fieldGroup("Your current PR for this distance");
+        var g1 = fieldGroup("Recent race distance");
+        var distGrid = h("div", { className: "grid grid-cols-3 sm:grid-cols-5 gap-2" });
+        toggleBtnGroup(distGrid, DISTANCES, state.currentPRDistance || state.goalDistance, function(d) { state.currentPRDistance = d; render(); });
+        g1.appendChild(distGrid);
+        form.appendChild(g1);
+
+        var g2 = fieldGroup("Your recent race time (hr : min : sec)");
         var row1 = h("div", { className: "flex items-center gap-2" });
         row1.appendChild(timeInput(state.currentPR.hours, function(v) { state.currentPR.hours = v; }));
         row1.appendChild(h("span", { text: ":", style: { color: "var(--offwhite-muted)" } }));
         row1.appendChild(timeInput(state.currentPR.minutes, function(v) { state.currentPR.minutes = v; }));
         row1.appendChild(h("span", { text: ":", style: { color: "var(--offwhite-muted)" } }));
         row1.appendChild(timeInput(state.currentPR.seconds, function(v) { state.currentPR.seconds = v; }));
-        row1.appendChild(h("span", { text: "hr : min : sec", className: "text-xs text-offwhite-muted", style: { marginLeft: "8px" } }));
-        g1.appendChild(row1);
-        form.appendChild(g1);
+        g2.appendChild(row1);
+        form.appendChild(g2);
 
-        var g2 = fieldGroup("How many days per week are you training now?");
+        var g3 = fieldGroup("How many days per week are you training now?");
         var grid = h("div", { className: "grid grid-cols-6 gap-2" });
         toggleBtnGroup(grid, ["2","3","4","5","6","7"], state.trainingDays, function(d) { state.trainingDays = d; render(); });
-        g2.appendChild(grid);
-        form.appendChild(g2);
+        g3.appendChild(grid);
+        form.appendChild(g3);
+
+        var g4 = fieldGroup("Years running");
+        var yrRow = h("div", { className: "flex items-center gap-4" });
+        yrRow.appendChild(h("input", { type: "number", min: "0", max: "60", value: state.yearsRunning, placeholder: "e.g. 3", style: { width: "120px" }, oninput: function(e) { state.yearsRunning = e.target.value; } }));
+        yrRow.appendChild(h("span", { className: "text-sm text-offwhite-muted", text: "years" }));
+        g4.appendChild(yrRow);
+        form.appendChild(g4);
       }
       if (segSlug === "trail") {
         var g1 = fieldGroup("What type of trails do you run?");
@@ -262,7 +287,7 @@
         form.appendChild(g1);
 
         var g2 = fieldGroup("Typical elevation gain per week (feet)");
-        g2.appendChild(h("input", { type: "number", placeholder: "e.g. 2000", oninput: function(e) { state.elevationGain = e.target.value; } }));
+        g2.appendChild(h("input", { type: "number", min: "0", max: "30000", placeholder: "e.g. 2000", oninput: function(e) { state.elevationGain = e.target.value; } }));
         form.appendChild(g2);
 
         var g3 = fieldGroup("Planning on any ultra distances?");
@@ -290,10 +315,15 @@
       dl.appendChild(rr("Race date", state.goalRaceDate || "Not set"));
       if (segSlug === "first-timer" && state.hasRunBefore !== null) dl.appendChild(rr("Run before", state.hasRunBefore ? "Yes" : "No"));
       if (segSlug === "returner" && state.timeOff) dl.appendChild(rr("Time off", state.timeOff));
-      if (segSlug === "competitive" && state.currentPR.hours) {
-        dl.appendChild(rr("Current PR", state.currentPR.hours + ":" + state.currentPR.minutes + ":" + state.currentPR.seconds));
+      if (segSlug === "returner" && state.comingFromInjury !== null) dl.appendChild(rr("Coming from injury", state.comingFromInjury ? "Yes" : "No"));
+      if (segSlug === "competitive" && (state.currentPR.hours || state.currentPR.minutes)) {
+        dl.appendChild(rr("Recent race distance", state.currentPRDistance || state.goalDistance));
+        var pr = (state.currentPR.hours || "0") + ":" + (state.currentPR.minutes || "00") + ":" + (state.currentPR.seconds || "00");
+        dl.appendChild(rr("Recent race time", pr));
       }
+      if (segSlug === "competitive" && state.yearsRunning) dl.appendChild(rr("Years running", state.yearsRunning));
       if (segSlug === "trail") dl.appendChild(rr("Trail type", state.trailType));
+      if (segSlug === "trail" && state.elevationGain) dl.appendChild(rr("Elevation gain", state.elevationGain + " ft"));
       review.appendChild(dl);
       form.appendChild(review);
     }
@@ -319,7 +349,7 @@
 
   function handleSubmit() {
     var raceTimeSecs;
-    if (state.currentPR.hours) {
+    if (state.currentPR.hours || state.currentPR.minutes || state.currentPR.seconds) {
       var hh = parseInt(state.currentPR.hours) || 0;
       var mm = parseInt(state.currentPR.minutes) || 0;
       var ss = parseInt(state.currentPR.seconds) || 0;
@@ -332,7 +362,9 @@
       goalRaceDate: state.goalRaceDate,
       weeklyMileage: state.weeklyMileage,
       recentRaceTimeSecs: raceTimeSecs || undefined,
-      recentRaceDistance: raceTimeSecs ? state.goalDistance : undefined,
+      recentRaceDistance: raceTimeSecs ? (state.currentPRDistance || state.goalDistance) : undefined,
+      injuryHistory: segSlug === "returner" && state.comingFromInjury ? state.injuryDescription : undefined,
+      elevationGain: state.elevationGain || undefined,
     });
 
     var planId = Date.now().toString(36);
