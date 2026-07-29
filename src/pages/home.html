@@ -444,5 +444,54 @@
 })();
 </script>
 
+<!-- Auth-aware nav script -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/static/supabase.js"></script>
+<script>
+(function() {
+  var navEl = document.querySelector('.site-nav');
+  if (!navEl) return;
+
+  // Create auth area container
+  var authSpan = document.createElement('span');
+  authSpan.id = 'nav-auth-area';
+  navEl.appendChild(authSpan);
+
+  function updateNav(user) {
+    if (user) {
+      var initials = (user.display_name || user.email || '?').split(' ').map(function(w){return w[0];}).join('').toUpperCase().substring(0,2);
+      authSpan.innerHTML = '<span style="display:flex;align-items:center;gap:8px;">' +
+        '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--surface-3);font-size:11px;font-weight:700;color:var(--text-muted);">' + initials + '</span>' +
+        '<a href="/profile" style="font-size:13px;font-weight:600;color:var(--charcoal);">' + (user.display_name || 'Profile') + '</a>' +
+        '<button onclick="StrideAuth.signOut(function(){window.location.reload();})" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;margin-left:8px;">Sign out</button>' +
+        '</span>';
+    } else {
+      authSpan.innerHTML = '<a href="/auth/signin" style="font-size:14px;font-weight:600;color:var(--cobalt);">Sign in</a>';
+    }
+  }
+
+  StrideAuth.getCurrentUser(function(err, user) {
+    if (user) {
+      // Get display name from metadata
+      var displayName = (user.user_metadata && user.user_metadata.display_name) || user.email;
+      updateNav({ display_name: displayName, email: user.email });
+    } else {
+      updateNav(null);
+    }
+  });
+
+  // Listen for auth changes
+  StrideAuth.onAuthStateChange(function(event, session) {
+    if (event === 'SIGNED_IN' && session) {
+      var u = session.user;
+      var displayName = (u.user_metadata && u.user_metadata.display_name) || u.email;
+      updateNav({ display_name: displayName, email: u.email });
+    } else if (event === 'SIGNED_OUT') {
+      updateNav(null);
+    }
+  });
+})();
+</script>
+
 </body>
 </html>

@@ -6,5 +6,8 @@
     "start": "node server.js",
     "publish": "bash publish.sh",
     "fetch-news": "node src/news-pipeline.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.111.0"
   }
 }
