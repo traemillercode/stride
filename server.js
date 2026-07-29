@@ -97,6 +97,22 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Legal pages
+  if (pathname === "/privacy") {
+    servePage(res, "privacy.html");
+    return;
+  }
+
+  if (pathname === "/terms") {
+    servePage(res, "terms.html");
+    return;
+  }
+
+  if (pathname === "/cookies") {
+    servePage(res, "cookies.html");
+    return;
+  }
+
   // Page routes
   if (pathname === "/") {
     servePage(res, "home.html");
