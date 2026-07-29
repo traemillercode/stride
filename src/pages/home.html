@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stride — Every runner starts somewhere</title>
 <link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="/static/brand-mark.svg" type="image/svg+xml">
 </head>
 <body>
 
@@ -15,35 +16,47 @@
       <a href="/races" class="nav-link">Races</a>
       <a href="/resources" class="nav-link">Resources</a>
       <a href="/community">Community</a>
-      <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
+      <a href="/onboarding/first-timer" class="nav-link" style="font-weight:600;color:var(--cobalt);">Start training</a>
     </nav>
   </div>
 </header>
 
 <main>
 
-<!-- Hero — split layout with image -->
-<section class="hero-section">
-  <div class="hero-content">
-    <h1 class="hero-headline">Every runner<br>starts somewhere</h1>
-    <p class="hero-subhead" style="margin-top:20px;">A home base that meets you where you are and builds the community to get you to your next race, stronger and healthier.</p>
-    <div class="flex flex-col sm:flex-row items-start gap-4" style="margin-top:32px;">
-      <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:14px 32px;">Map your roadmap</a>
-      <a href="#how-it-works" class="btn btn-secondary" style="padding:14px 32px;color:var(--violet);border-color:rgba(108,60,225,0.4);">How Stride works</a>
+<!-- Hero — compact intro with inline SVG runner -->
+<section class="hero-section" style="min-height:260px;">
+  <div class="hero-content" style="max-width:720px;padding:40px 24px 40px 48px;display:flex;align-items:center;gap:40px;">
+    <div style="flex:1;">
+      <h1 class="hero-headline" style="font-size:44px;">Every runner starts somewhere</h1>
+      <p class="hero-subhead" style="max-width:460px;margin-top:14px;">A home base that meets you where you are and builds the community to get you to your next race, stronger and healthier.</p>
+      <div style="margin-top:24px;">
+        <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:14px 32px;">Map your roadmap</a>
+      </div>
+    </div>
+    <div style="flex-shrink:0;display:none;" class="hero-mark-md">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130" width="120" height="156" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="16" r="7" fill="none" stroke="#1E5EF5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M50 23 L44 58" fill="none" stroke="#1E5EF5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M50 27 L62 22 L73 32" fill="none" stroke="#1E5EF5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M50 27 L37 33 L29 47" fill="none" stroke="#1E5EF5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M44 58 L57 66 L68 84" fill="none" stroke="#1E5EF5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M44 58 L32 71 L24 92" fill="none" stroke="#1E5EF5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M68 84 L74 86" fill="none" stroke="#1E5EF5" stroke-width="3" stroke-linecap="round"/>
+        <path d="M24 92 L18 90" fill="none" stroke="#1E5EF5" stroke-width="3" stroke-linecap="round"/>
+      </svg>
     </div>
   </div>
-  <div class="hero-image-wrap">
-    <div class="hero-image-gradient"></div>
-    <img src="/static/hero-runner.jpg" alt="Runner in motion">
-  </div>
+  <style>
+    @media (min-width: 640px) { .hero-mark-md { display: block !important; } }
+  </style>
 </section>
 
-<!-- Segment Cards — four paths -->
-<section id="how-it-works" class="section-surface2 section-border-top py-16">
+<!-- Segment Cards — four paths (primary focal point, above fold) -->
+<section id="how-it-works" class="section-surface2 section-border-top py-12">
   <div class="container">
     <h2 class="section-heading">Four paths, one starting line</h2>
     <p class="mt-3 text-muted text-lg">Each path is built for a different kind of runner. Pick the one that fits.</p>
-    <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <a href="/onboarding/first-timer" class="segment-card">
         <div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h3c1 0 3-2 3-4V8c0-1 .6-2 1.5-2.5L14 3"/><path d="M14 3l2 2M14 3l-1 4"/><path d="M18 12h2l1 3-2 4h-3l-2-6"/><path d="M5 20v-2"/><circle cx="20" cy="17" r="1.5"/></svg></div>
         <h3>Your first race</h3>
@@ -161,7 +174,7 @@
     <p class="mt-3 text-xs text-dim">via World Athletics, Feb 2024</p>
     <a href="https://worldathletics.org/competitions/olympic-games/paris24/news/article/us-olympic-marathon-trials-2024-orlando" target="_blank" rel="noopener" class="inline-block mt-2 text-sm font-semibold text-cobalt" style="text-decoration:underline;text-underline-offset:2px;">Read more →</a>
   </div>
-  <!-- Card: Track — Kipyegon WR -->
+  <!-- Card: Track -- Kipyegon WR -->
   <div class="card-dark" style="border-left:3px solid var(--violet);display:flex;flex-direction:column;">
     <span class="type-badge" style="background:rgba(108,60,225,0.12);color:var(--violet);">Track</span>
     <h3 class="font-display text-lg font-bold leading-snug" style="margin-top:12px;">Kipyegon shatters 1500m world record</h3>
@@ -169,15 +182,15 @@
     <p class="mt-3 text-xs text-dim">via World Athletics, Jul 2024</p>
     <a href="https://worldathletics.org/news/report/faith-kipyegon-world-record-1500m-paris-2024" target="_blank" rel="noopener" class="inline-block mt-2 text-sm font-semibold text-violet" style="text-decoration:underline;text-underline-offset:2px;">Read more →</a>
   </div>
-  <!-- Card: Trail — UTMB -->
+  <!-- Card: Trail -- UTMB -->
   <div class="card-dark" style="border-left:3px solid var(--lime);display:flex;flex-direction:column;">
-    <span class="type-badge" style="background:rgba(132,204,22,0.12);color:#65A30D;">Trail</span>
+    <span class="type-badge" style="background:rgba(132,204,22,0.12);color:#3F6212;">Trail</span>
     <h3 class="font-display text-lg font-bold leading-snug" style="margin-top:12px;">Walmsley and Schide dominate UTMB</h3>
     <p class="mt-2 text-sm text-muted leading-relaxed" style="flex:1;">Jim Walmsley and Katie Schide claimed decisive victories at UTMB 2024 in Chamonix. Walmsley defended his 2023 title while Schide broke the women's course record by over 20 minutes on the 106-mile Alpine loop, cementing both as the era's top ultra-distance racers.</p>
     <p class="mt-3 text-xs text-dim">via iRunFar, Sep 2024</p>
     <a href="https://www.irunfar.com/utmb-2024-results-recap" target="_blank" rel="noopener" class="inline-block mt-2 text-sm font-semibold text-lime" style="text-decoration:underline;text-underline-offset:2px;">Read more →</a>
   </div>
-  <!-- Card: Gear — Alphafly 4 -->
+  <!-- Card: Gear -- Alphafly 4 -->
   <div class="card-dark" style="border-left:3px solid var(--magenta);display:flex;flex-direction:column;">
     <span class="type-badge" style="background:rgba(255,45,120,0.12);color:var(--magenta);">Gear</span>
     <h3 class="font-display text-lg font-bold leading-snug" style="margin-top:12px;">Nike launches Alphafly 4</h3>
@@ -198,21 +211,21 @@
         <p class="text-sm text-muted leading-relaxed" style="font-style:italic;"><span style="color:var(--magenta);font-weight:900;font-size:20px;">&ldquo;</span>I went from couch to half marathon in 14 weeks. The roadmap kept me honest without making me feel like I didn't belong.<span style="color:var(--magenta);font-weight:900;">&rdquo;</span></p>
         <div class="mt-4" style="border-top:1px solid var(--border);padding-top:16px;">
           <span class="block text-sm font-semibold">Marcus D.</span>
-          <span class="block text-xs" style="color:#65A30D;">First race</span>
+          <span class="block text-xs" style="color:#3F6212;">First race</span>
         </div>
       </div>
       <div class="card-dark" style="border-left: 3px solid var(--magenta);">
         <p class="text-sm text-muted leading-relaxed" style="font-style:italic;"><span style="color:var(--magenta);font-weight:900;font-size:20px;">&ldquo;</span>After two years off with an Achilles issue, I was terrified of re-injury. The returner path had me running pain-free by week six.<span style="color:var(--magenta);font-weight:900;">&rdquo;</span></p>
         <div class="mt-4" style="border-top:1px solid var(--border);padding-top:16px;">
           <span class="block text-sm font-semibold">Priya K.</span>
-          <span class="block text-xs" style="color:#65A30D;">Coming back</span>
+          <span class="block text-xs" style="color:#3F6212;">Coming back</span>
         </div>
       </div>
       <div class="card-dark" style="border-left: 3px solid var(--magenta);">
         <p class="text-sm text-muted leading-relaxed" style="font-style:italic;"><span style="color:var(--magenta);font-weight:900;font-size:20px;">&ldquo;</span>Dropped 8 minutes off my marathon PR using the competitive plan. The pacing calculator alone was worth it.<span style="color:var(--magenta);font-weight:900;">&rdquo;</span></p>
         <div class="mt-4" style="border-top:1px solid var(--border);padding-top:16px;">
           <span class="block text-sm font-semibold">David R.</span>
-          <span class="block text-xs" style="color:#65A30D;">Chasing a PR</span>
+          <span class="block text-xs" style="color:#3F6212;">Chasing a PR</span>
         </div>
       </div>
     </div>

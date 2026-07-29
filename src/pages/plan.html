@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stride — Your roadmap</title>
 <link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="/static/brand-mark.svg" type="image/svg+xml">
 </head>
 <body>
 
@@ -244,7 +245,7 @@
     summary.appendChild(h("h1", { className: "font-display text-3xl md:text-4xl", text: titleText }));
 
     if (plan.isElite) {
-      var eliteBadge = h("span", { className: "text-xs font-semibold", style: "background:rgba(200,255,0,0.12);color:var(--lime);border:1px solid rgba(200,255,0,0.25);border-radius:var(--radius);padding:4px 12px;margin-left:12px;", text: "Elite tier" });
+      var eliteBadge = h("span", { className: "text-xs font-semibold", style: "background:rgba(200,255,0,0.12);color:var(--lime-text);border:1px solid rgba(200,255,0,0.25);border-radius:var(--radius);padding:4px 12px;margin-left:12px;", text: "Elite tier" });
       titleText && summary.appendChild(eliteBadge);
     }
 
