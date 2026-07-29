@@ -812,3 +812,146 @@ margin-bottom: 12px;
   margin-top: 6px;
   flex-wrap: wrap;
 }
+
+/* ── Auto-posted label ── */
+.auto-posted-label {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* ── Platform card (auto-post settings) ── */
+.platform-card {
+  padding: 0 !important;
+  transition: border-color 0.15s;
+}
+.platform-card:hover {
+  border-color: var(--border-visible);
+}
+.platform-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  flex-wrap: wrap;
+}
+.platform-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--cobalt);
+}
+.platform-info {
+  flex: 1;
+  min-width: 160px;
+}
+.platform-name {
+  font-weight: 600;
+  font-size: 14px;
+  display: block;
+}
+.platform-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+.platform-status {
+  flex-shrink: 0;
+}
+.status-indicator {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+.status-connected {
+  background: rgba(132,204,22,0.12);
+  color: #65A30D;
+  border: 1px solid rgba(132,204,22,0.25);
+}
+.status-disconnected {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* ── Toggle switch ── */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--surface-3);
+  border-radius: 24px;
+  border: 1px solid var(--border-visible);
+  transition: background 0.2s, border-color 0.2s;
+}
+.toggle-track::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle-input:checked + .toggle-track {
+  background: var(--cobalt);
+  border-color: var(--cobalt);
+}
+.toggle-input:checked + .toggle-track::after {
+  transform: translateX(20px);
+}
+.toggle-input:focus-visible + .toggle-track {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 2px;
+}
+
+/* ── Checkbox row (activity type filter) ── */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 0;
+}
+.checkbox-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--cobalt);
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 0;
+}
+.checkbox-label {
+  font-size: 14px;
+  font-weight: 500;
+  user-select: none;
+}
+
+/* ── Hidden utility ── */
+.hidden { display: none; }
+.ml-4 { margin-left: 16px; }

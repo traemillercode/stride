@@ -48,6 +48,141 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ── Webhook endpoint: receive activity data from connected devices ──
+  // POST /api/webhook/activity
+  // Accepts JSON payload with activity data from Garmin, Strava, Coros, Apple Health, Amazfit, Suunto.
+  //
+  // Expected payload:
+  // {
+  //   "user": "string (required) — user identifier (future: auth token instead)",
+  //   "activity": {
+  //     "type": "run | ride | swim | walk | workout",
+  //     "distanceMi": 0.0,
+  //     "durationSecs": 0,
+  //     "avgPaceSecsPerMi": 0,
+  //     "elevationFt": 0,
+  //     "calories": 0
+  //   },
+  //   "source": {
+  //     "platform": "garmin | strava | coros | apple_health | amazfit | suunto",
+  //     "activityId": "platform-native activity id"
+  //   },
+  //   "location": { "city": "string", "state": "string" },
+  //   "narrative": "string (optional) — user's note or auto-generated summary",
+  //   "startedAt": "ISO 8601 datetime string"
+  // }
+  //
+  // Auth (future): Bearer token in Authorization header, validated against user's device connections.
+  // Rate limiting (future): 100 requests/hour per user, enforced via token bucket.
+  //
+  if (pathname === "/api/webhook/activity") {
+    if (req.method === "GET") {
+      // Return API documentation
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({
+        endpoint: "/api/webhook/activity",
+        method: "POST",
+        description: "Receive activity data from connected devices",
+        auth: "Bearer token (future)",
+        rateLimit: "100 requests/hour per user (future)",
+        schema: {
+          required: ["user", "activity", "source"],
+          properties: {
+            user: { type: "string", description: "User identifier" },
+            activity: {
+              type: "object",
+              properties: {
+                type: { type: "string", enum: ["run", "ride", "swim", "walk", "workout"] },
+                distanceMi: { type: "number" },
+                durationSecs: { type: "number" },
+                avgPaceSecsPerMi: { type: "number" },
+                elevationFt: { type: "number" },
+                calories: { type: "number" }
+              }
+            },
+            source: {
+              type: "object",
+              required: ["platform"],
+              properties: {
+                platform: { type: "string", enum: ["garmin", "strava", "coros", "apple_health", "amazfit", "suunto"] },
+                activityId: { type: "string" }
+              }
+            },
+            location: {
+              type: "object",
+              properties: {
+                city: { type: "string" },
+                state: { type: "string" }
+              }
+            },
+            narrative: { type: "string" },
+            startedAt: { type: "string", format: "date-time" }
+          }
+        }
+      }, null, 2));
+      return;
+    }
+
+    if (req.method === "POST") {
+      var body = "";
+      req.on("data", function(chunk) { body += chunk; });
+      req.on("end", function() {
+        try {
+          var data = JSON.parse(body);
+
+          // Validate required fields
+          if (!data.user || typeof data.user !== "string") {
+            res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+            res.end(JSON.stringify({ error: "Missing or invalid field: user (string required)" }));
+            return;
+          }
+          if (!data.activity || typeof data.activity !== "object") {
+            res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+            res.end(JSON.stringify({ error: "Missing or invalid field: activity (object required)" }));
+            return;
+          }
+          if (!data.source || typeof data.source !== "object" || !data.source.platform) {
+            res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+            res.end(JSON.stringify({ error: "Missing or invalid field: source.platform (string required)" }));
+            return;
+          }
+
+          // Validate platform against known list
+          var validPlatforms = ["garmin", "strava", "coros", "apple_health", "amazfit", "suunto", "manual"];
+          if (validPlatforms.indexOf(data.source.platform) === -1) {
+            res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+            res.end(JSON.stringify({ error: "Invalid platform: " + data.source.platform + ". Must be one of: " + validPlatforms.join(", ") }));
+            return;
+          }
+
+          // Log received activity (console for now — future: persist to database)
+          console.log("[webhook] activity received:", JSON.stringify({
+            user: data.user,
+            type: data.activity.type,
+            platform: data.source.platform,
+            timestamp: new Date().toISOString(),
+          }));
+
+          // 202 Accepted — acknowledged but not yet processed
+          res.writeHead(202, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({
+            status: "accepted",
+            message: "Activity received. Auto-post processing will begin shortly."
+          }));
+        } catch (e) {
+          res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
+    // Method not allowed
+    res.writeHead(405, { "Content-Type": "application/json; charset=utf-8", "Allow": "GET, POST" });
+    res.end(JSON.stringify({ error: "Method not allowed. Use GET for docs, POST to submit activity." }));
+    return;
+  }
+
   // Static files (CSS, JS, images)
   if (pathname.startsWith("/static/")) {
     serveFile(res, path.join(SITE_DIR, "src", pathname));
@@ -148,6 +283,12 @@ const server = http.createServer((req, res) => {
       servePage(res, "contact.html");
       return;
     }
+
+  // Settings
+  if (pathname === "/settings/auto-post") {
+    servePage(res, "auto-post-settings.html");
+    return;
+  }
 
   // Page routes
   if (pathname === "/") {
