@@ -847,7 +847,8 @@ const server = http.createServer((req, res) => {
   // GET /api/circles/discover
   if (pathname === "/api/circles/discover" && req.method === "GET") {
     if (!db) {
-      db.json(res, 500, { error: "Database not available" });
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "Database not available" }));
       return;
     }
     var supabase = db.getClient();
@@ -868,7 +869,8 @@ const server = http.createServer((req, res) => {
   // GET /api/circles
   if (pathname === "/api/circles" && req.method === "GET") {
     if (!db) {
-      db.json(res, 500, { error: "Database not available" });
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "Database not available" }));
       return;
     }
     var authHeader = req.headers.authorization;
@@ -901,7 +903,8 @@ const server = http.createServer((req, res) => {
   // POST /api/circles
   if (pathname === "/api/circles" && req.method === "POST") {
     if (!db) {
-      db.json(res, 500, { error: "Database not available" });
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "Database not available" }));
       return;
     }
     var authHeader = req.headers.authorization;
@@ -948,7 +951,8 @@ const server = http.createServer((req, res) => {
   // GET /api/circles/:id
   if (pathname.match(/^\/api\/circles\/[^\/]+$/) && req.method === "GET") {
     if (!db) {
-      db.json(res, 500, { error: "Database not available" });
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "Database not available" }));
       return;
     }
     var circleId = pathname.split("/")[3];
@@ -1033,7 +1037,8 @@ const server = http.createServer((req, res) => {
   // POST /api/circles/:id/join
   if (pathname.match(/^\/api\/circles\/[^\/]+\/join$/) && req.method === "POST") {
     if (!db) {
-      db.json(res, 500, { error: "Database not available" });
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "Database not available" }));
       return;
     }
     var authHeader = req.headers.authorization;
@@ -1109,7 +1114,8 @@ const server = http.createServer((req, res) => {
   // POST /api/circles/:id/leave
   if (pathname.match(/^\/api\/circles\/[^\/]+\/leave$/) && req.method === "POST") {
     if (!db) {
-      db.json(res, 500, { error: "Database not available" });
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "Database not available" }));
       return;
     }
     var authHeader = req.headers.authorization;
@@ -1160,7 +1166,8 @@ const server = http.createServer((req, res) => {
   // DELETE /api/circles/:id
   if (pathname.match(/^\/api\/circles\/[^\/]+$/) && req.method === "DELETE") {
     if (!db) {
-      db.json(res, 500, { error: "Database not available" });
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: "Database not available" }));
       return;
     }
     var authHeader = req.headers.authorization;
