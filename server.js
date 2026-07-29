@@ -327,6 +327,16 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    if (pathname === "/community-guidelines") {
+      servePage(res, "community-guidelines.html");
+      return;
+    }
+
+    if (pathname === "/payment-refund") {
+      servePage(res, "payment-refund.html");
+      return;
+    }
+
   // Settings
   if (pathname === "/settings/auto-post") {
     servePage(res, "auto-post-settings.html");
