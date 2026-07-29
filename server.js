@@ -123,6 +123,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathname === "/accessibility") {
+    servePage(res, "accessibility.html");
+    return;
+  }
+
   // Page routes
   if (pathname === "/") {
     servePage(res, "home.html");

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility — Stride</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav">
+      <a href="/races" class="nav-link">Races</a>
+      <a href="/resources" class="nav-link">Resources</a>
+      <a href="/community">Community</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="section-surface2 section-border-top py-16">
+    <div class="container-narrow">
+      <div class="card p-8 mb-8" style="border-left:4px solid var(--magenta);">
+        <p class="text-sm text-magenta font-semibold">This is a draft statement. Consult legal counsel before relying on it.</p>
+      </div>
+
+      <h1 class="section-heading">Accessibility</h1>
+      <p class="mt-3 text-muted text-lg">How Stride works for every runner, on every device</p>
+
+      <div class="mt-10" style="max-width:640px;">
+
+        <!-- Commitment -->
+        <div class="card p-6 mb-10 border-l-cobalt">
+          <p class="text-base leading-relaxed text-muted">Stride is committed to making our platform accessible to every runner. We target <strong>WCAG 2.1 Level AAA</strong> — the highest standard for web accessibility — and we build with that goal from day one. This is not a compliance checkbox for us. It's part of building a community that truly includes everyone, regardless of how they access the web.</p>
+        </div>
+
+        <!-- Current Status -->
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">Where we are today</h2>
+        <p class="text-sm leading-relaxed text-muted mb-4">We're early in our journey and we want to be honest about that. Here's what we have in place and what we're still working on.</p>
+
+        <h3 class="font-display text-lg font-bold mt-8 mb-3">What we do well</h3>
+        <ul class="text-sm leading-relaxed text-muted" style="padding-left:20px;">
+          <li class="mb-2"><strong>AAA color contrast.</strong> We target 7:1 contrast for body text and 4.5:1 for large text — stricter than the AA minimum most sites use. Our dark charcoal text against off-white surfaces is built for readability.</li>
+          <li class="mb-2"><strong>Semantic HTML.</strong> Pages use proper heading hierarchies, landmark regions, and meaningful document structure so screen readers can navigate efficiently.</li>
+          <li class="mb-2"><strong>ARIA labels on interactive elements.</strong> Buttons, links, and form controls carry descriptive labels. Our inline SVG icons include accessible attributes so they're not invisible to assistive technology.</li>
+          <li class="mb-2"><strong>Keyboard navigation.</strong> Every page is fully navigable by keyboard alone. Focus states use visible cobalt-blue outlines so you always know where you are.</li>
+          <li class="mb-2"><strong>Readable type.</strong> Our type system uses generous sizing, comfortable line heights, and a clean sans-serif body font designed for extended reading.</li>
+          <li class="mb-2"><strong>Motion sensitivity.</strong> We avoid auto-playing animations and respect the <code style="background:var(--surface-3);padding:1px 6px;border-radius:4px;font-size:13px;">prefers-reduced-motion</code> media query across our interface.</li>
+          <li class="mb-2"><strong>Responsive layout.</strong> The site works across screen sizes without horizontal scrolling or content cut-off.</li>
+        </ul>
+
+        <!-- Known Limitations -->
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">Known limitations</h2>
+        <p class="text-sm leading-relaxed text-muted mb-4">We're a small team building in the open, and there are areas we know need work. Here's what we're tracking:</p>
+        <ul class="text-sm leading-relaxed text-muted" style="padding-left:20px;">
+          <li class="mb-2"><strong>Dynamic plan content.</strong> The roadmap builder inserts content into the page after load. We're improving how screen readers are notified of these live region updates.</li>
+          <li class="mb-2"><strong>Inline SVG icons.</strong> While we use accessible attributes, some decorative icons still need improved labeling — particularly those that sit alongside visible text labels.</li>
+          <li class="mb-2"><strong>Community feed updates.</strong> Real-time content refreshes (new posts, pace-space messages) don't yet provide consistent screen reader announcements.</li>
+          <li class="mb-2"><strong>Pace calculator tables.</strong> The results table uses visual styling to highlight rows. We're adding programmatic cues so the highlight meaning is conveyed non-visually.</li>
+          <li class="mb-2"><strong>Onboarding stepper.</strong> Multi-step onboarding uses a stepper pattern — step transitions need improved focus management for keyboard and screen reader users.</li>
+          <li class="mb-2"><strong>Third-party embeds.</strong> Future integrations (Spotify, YouTube, Apple Music) will bring embedded players with their own accessibility characteristics. We'll evaluate each embed partner's accessibility before integrating.</li>
+        </ul>
+        <p class="text-sm leading-relaxed text-muted mb-4">These are tracked internally and we address the highest-impact items first. If you encounter something we haven't listed, please let us know.</p>
+
+        <!-- How We Test -->
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">How we test</h2>
+        <p class="text-sm leading-relaxed text-muted mb-4">Accessibility testing is part of our build process, not an afterthought. We use a combination of:</p>
+        <ul class="text-sm leading-relaxed text-muted" style="padding-left:20px;">
+          <li class="mb-2"><strong>Manual review.</strong> Every new page and feature is manually reviewed against WCAG 2.1 AAA criteria by a team member before it ships.</li>
+          <li class="mb-2"><strong>Automated contrast checking.</strong> We test every color pairing for AAA contrast ratios throughout development.</li>
+          <li class="mb-2"><strong>Screen reader testing.</strong> We navigate the full site with VoiceOver (macOS) and NVDA (Windows) to catch issues that automated tools miss.</li>
+          <li class="mb-2"><strong>Keyboard-only testing.</strong> We run through every interaction using only the keyboard — Tab, Enter, Escape, arrow keys — to ensure nothing is mouse-dependent.</li>
+          <li class="mb-2"><strong>Zoom and text scaling.</strong> Pages are tested at 200% zoom and with browser text scaling to verify no content or function is lost.</li>
+        </ul>
+
+        <!-- Report an Issue -->
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">Report an accessibility issue</h2>
+        <p class="text-sm leading-relaxed text-muted mb-4">If you encounter a barrier on Stride, we want to hear about it. Accessibility issues get our immediate attention — we treat them as high-priority bugs, not feature requests.</p>
+
+        <div class="card p-6 mb-6" style="border-left:4px solid var(--cobalt);">
+          <p class="text-sm leading-relaxed text-muted mb-4">Email us with the subject line "Accessibility Report" and describe what you encountered — which page, what you were trying to do, and what browser or assistive technology you're using. Screenshots help but aren't required.</p>
+          <p class="text-lg font-semibold" style="font-family:monospace;">
+            <a href="mailto:accessibility@stride.com" class="text-cobalt" style="text-decoration:underline;">accessibility@stride.com</a>
+          </p>
+          <p class="text-xs text-dim mt-2">Subject line: Accessibility Report</p>
+        </div>
+
+        <p class="text-sm leading-relaxed text-muted mb-4">We aim to acknowledge every report within 3 business days and provide a timeline for resolution within 10 business days.</p>
+
+        <!-- Feedback Welcome -->
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">Feedback is always welcome</h2>
+        <p class="text-sm leading-relaxed text-muted mb-4">You don't need to hit a barrier to reach out. If something feels awkward, inconsistent, or harder than it should be — even if it technically works — tell us. Accessibility isn't just about meeting a spec. It's about the real experience.</p>
+        <p class="text-sm leading-relaxed text-muted mb-4">For general feedback (not specifically about accessibility), reach us through our <a href="/privacy" class="text-cobalt" style="text-decoration:underline;">support contact</a>.</p>
+
+        <!-- Conformance Note -->
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">Conformance note</h2>
+        <p class="text-sm leading-relaxed text-muted mb-4">This statement is a living document. As we close gaps and improve, this page will reflect our current status — not a static snapshot from launch week. Full AAA conformance is our target, but we won't claim it until we've verified every page against every criterion and resolved all known issues.</p>
+
+        <p class="text-xs text-dim mt-12">Last updated: July 29, 2026</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>Stride — Built for every runner</p>
+  <div class="links">
+    <a href="/races" class="nav-link">Races</a>
+    <a href="/resources" class="nav-link">Resources</a>
+    <a href="/community">Community</a>
+    <span aria-hidden="true" style="color:var(--text-dim);margin:0 8px;">|</span>
+    <a href="/privacy" class="nav-link">Privacy</a>
+    <a href="/terms" class="nav-link">Terms</a>
+    <a href="/cookies" class="nav-link">Cookies</a>
+    <a href="/data-deletion" class="nav-link">Data deletion</a>
+    <a href="/health-disclosure" class="nav-link">Health disclosure</a>
+    <a href="/accessibility" class="nav-link">Accessibility</a>
+  </div>
+</footer>
+
+<script>
+(function() {
+  if (localStorage.getItem('cookieConsent') === 'true') return;
+  var banner = document.createElement('div');
+  banner.id = 'cookie-banner';
+  banner.innerHTML = '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--surface-1);border-top:1px solid var(--border-visible);padding:16px 24px;z-index:9999;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 -2px 12px rgba(0,0,0,0.06);"><p style="font-size:13px;color:var(--text-muted);margin:0;flex:1;min-width:200px;">Stride uses cookies for core functionality, analytics, and affiliate links. See our <a href="/cookies" style="color:var(--cobalt);text-decoration:underline;">Cookie Policy</a> for details.</p><div style="display:flex;gap:8px;flex-shrink:0;"><button id="cookie-accept" class="btn btn-primary" style="padding:10px 20px;font-size:13px;">Accept all</button><a href="/cookies" class="btn btn-secondary" style="padding:10px 20px;font-size:13px;">Cookie settings</a></div></div>';
+  document.body.appendChild(banner);
+  document.getElementById('cookie-accept').addEventListener('click', function() {
+    localStorage.setItem('cookieConsent', 'true');
+    document.getElementById('cookie-banner').remove();
+  });
+})();
+</script>
+
+</body>
+</html>
