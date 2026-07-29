@@ -337,6 +337,11 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    if (pathname === "/verified-business-terms") {
+      servePage(res, "verified-business-terms.html");
+      return;
+    }
+
   // Settings
   if (pathname === "/settings/auto-post") {
     servePage(res, "auto-post-settings.html");
