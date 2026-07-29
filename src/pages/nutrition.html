@@ -6,6 +6,9 @@
 <title>Race-day nutrition — Stride</title>
 <link rel="stylesheet" href="/static/style.css">
 <link rel="icon" href="/static/brand-mark.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/static/supabase.js"></script>
+<script src="/static/save-widget.js" defer></script>
 </head>
 <body>
 
@@ -16,7 +19,7 @@
       <a href="/races" class="nav-link">Races</a>
       <a href="/resources" class="nav-link">Resources</a>
       <a href="/community">Community</a>
-      <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
+      <span id="nav-auth-area"></span>
     </nav>
   </div>
 </header>
@@ -113,7 +116,8 @@
 
   </div>
 
-  <div class="mt-10">
+  <div class="mt-10" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <button class="btn btn-secondary save-btn" style="font-size:13px;position:relative;" data-item-type="resource" data-item-id="nutrition" data-item-title="Race-day nutrition: what to eat the week before" data-item-url="/resources/nutrition" data-item-description="7-day carb loading and meal timing plan for race week">Save to board</button>
     <a href="/resources" class="btn btn-secondary">← Back to resources</a>
   </div>
 </div>

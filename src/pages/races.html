@@ -6,6 +6,9 @@
 <title>Race directory — Stride</title>
 <link rel="stylesheet" href="/static/style.css">
 <link rel="icon" href="/static/brand-mark.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/static/supabase.js"></script>
+<script src="/static/save-widget.js" defer></script>
 </head>
 <body>
 
@@ -16,7 +19,7 @@
       <a href="/races" class="nav-active">Races</a>
       <a href="/resources" class="nav-link">Resources</a>
       <a href="/community">Community</a>
-      <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
+      <span id="nav-auth-area"></span>
     </nav>
   </div>
 </header>
@@ -291,9 +294,10 @@
     }
     html += '</div>';
 
-    // Register button
-    html += '<div style="margin-top:auto;">';
-    html += '<a href="' + r.registrationUrl + '" target="_blank" rel="noopener" class="btn btn-primary" style="padding:8px 20px;font-size:13px;width:100%;text-align:center;">View race</a>';
+    // Register + Save buttons
+    html += '<div style="margin-top:auto;display:flex;gap:8px;">';
+    html += '<a href="' + r.registrationUrl + '" target="_blank" rel="noopener" class="btn btn-primary" style="padding:8px 16px;font-size:13px;flex:1;text-align:center;">View race</a>';
+    html += '<button class="btn btn-secondary save-btn" style="font-size:12px;position:relative;padding:8px 12px;flex-shrink:0;" data-item-type="race" data-item-id="' + r.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') + '" data-item-title="' + r.name.replace(/"/g,'&quot;') + '" data-item-url="' + r.registrationUrl + '" data-item-description="' + loc + ' · ' + dateStr + '">Save</button>';
     html += '</div>';
 
     html += '</div>';

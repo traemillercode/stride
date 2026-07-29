@@ -629,9 +629,224 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ── Boards: Get all boards for authenticated user ──
+  // GET /api/boards
+  if (pathname === "/api/boards" && req.method === "GET") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      db.json(res, 401, { error: "Authentication required" });
+      return;
+    }
+    var token = authHeader.split(" ")[1];
+    var supabase = db.getClient();
+    supabase.auth.getUser(token).then(function(r) {
+      if (r.error || !r.data.user) { db.json(res, 401, { error: "Invalid token" }); return; }
+      var userId = r.data.user.id;
+      supabase.from("boards").select("*, pins:pins(id)").eq("user_id", userId).order("created_at", { ascending: false })
+        .then(function(br) {
+          if (br.error) { db.json(res, 500, { error: br.error.message }); return; }
+          // Transform: add pin_count, remove pins array
+          var boards = (br.data || []).map(function(b) {
+            return {
+              id: b.id, name: b.name, description: b.description, is_public: b.is_public,
+              created_at: b.created_at, pin_count: b.pins ? b.pins.length : 0
+            };
+          });
+          db.json(res, 200, { boards: boards });
+        }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    return;
+  }
+
+  // ── Boards: Create a new board ──
+  // POST /api/boards
+  if (pathname === "/api/boards" && req.method === "POST") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      db.json(res, 401, { error: "Authentication required" });
+      return;
+    }
+    var token = authHeader.split(" ")[1];
+    var supabase = db.getClient();
+    supabase.auth.getUser(token).then(function(r) {
+      if (r.error || !r.data.user) { db.json(res, 401, { error: "Invalid token" }); return; }
+      var userId = r.data.user.id;
+      db.parseBody(req).then(function(body) {
+        var name = body.name;
+        var description = body.description || "";
+        var isPublic = body.is_public === true;
+        if (!name || !name.trim()) { db.json(res, 400, { error: "Board name is required." }); return; }
+        supabase.from("boards").insert({
+          user_id: userId, name: name.trim(), description: description, is_public: isPublic
+        }).select().single().then(function(ir) {
+          if (ir.error) { db.json(res, 500, { error: ir.error.message }); return; }
+          db.json(res, 201, { board: ir.data });
+        }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+      }).catch(function() { db.json(res, 400, { error: "Invalid JSON body" }); });
+    }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    return;
+  }
+
+  // ── Boards: Delete a board ──
+  // DELETE /api/boards/:id
+  if (pathname.match(/^\/api\/boards\/[^\/]+$/) && req.method === "DELETE") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      db.json(res, 401, { error: "Authentication required" });
+      return;
+    }
+    var token = authHeader.split(" ")[1];
+    var boardId = pathname.split("/")[3];
+    var supabase = db.getClient();
+    supabase.auth.getUser(token).then(function(r) {
+      if (r.error || !r.data.user) { db.json(res, 401, { error: "Invalid token" }); return; }
+      var userId = r.data.user.id;
+      // Only allow deleting own boards
+      supabase.from("boards").delete().eq("id", boardId).eq("user_id", userId)
+        .then(function(dr) {
+          if (dr.error) { db.json(res, 500, { error: dr.error.message }); return; }
+          db.json(res, 200, { status: "deleted" });
+        }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    return;
+  }
+
+  // ── Pins: Get pins for a board ──
+  // GET /api/boards/:id/pins
+  if (pathname.match(/^\/api\/boards\/[^\/]+\/pins$/) && req.method === "GET") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var boardId = pathname.split("/")[3];
+    var supabase = db.getClient();
+    // Allow viewing pins on public boards without auth, but restrict private boards
+    var authHeader = req.headers.authorization;
+    var token = (authHeader && authHeader.startsWith("Bearer ")) ? authHeader.split(" ")[1] : null;
+
+    var fetchPins = function(userId) {
+      // Check board access
+      var boardQuery = supabase.from("boards").select("id,is_public,user_id").eq("id", boardId).single();
+      boardQuery.then(function(br) {
+        if (br.error || !br.data) { db.json(res, 404, { error: "Board not found." }); return; }
+        if (!br.data.is_public && (!userId || userId !== br.data.user_id)) {
+          db.json(res, 403, { error: "This board is private." });
+          return;
+        }
+        supabase.from("pins").select("*").eq("board_id", boardId).order("created_at", { ascending: false })
+          .then(function(pr) {
+            if (pr.error) { db.json(res, 500, { error: pr.error.message }); return; }
+            db.json(res, 200, { pins: pr.data || [] });
+          }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+      }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    };
+
+    if (token) {
+      supabase.auth.getUser(token).then(function(r) {
+        fetchPins(r.data && r.data.user ? r.data.user.id : null);
+      }).catch(function() { fetchPins(null); });
+    } else {
+      fetchPins(null);
+    }
+    return;
+  }
+
+  // ── Pins: Add a pin to a board ──
+  // POST /api/boards/:boardId/pins
+  if (pathname.match(/^\/api\/boards\/[^\/]+\/pins$/) && req.method === "POST") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      db.json(res, 401, { error: "Authentication required" });
+      return;
+    }
+    var token = authHeader.split(" ")[1];
+    var boardId = pathname.split("/")[3];
+    var supabase = db.getClient();
+    supabase.auth.getUser(token).then(function(r) {
+      if (r.error || !r.data.user) { db.json(res, 401, { error: "Invalid token" }); return; }
+      var userId = r.data.user.id;
+      // Verify board belongs to user
+      supabase.from("boards").select("id,user_id").eq("id", boardId).eq("user_id", userId).single()
+        .then(function(br) {
+          if (br.error || !br.data) { db.json(res, 404, { error: "Board not found or access denied." }); return; }
+          db.parseBody(req).then(function(body) {
+            var itemType = body.item_type;
+            var itemId = body.item_id;
+            var itemTitle = body.item_title;
+            var itemUrl = body.item_url;
+            var itemDescription = body.item_description || "";
+            if (!itemType || !itemId || !itemTitle || !itemUrl) {
+              db.json(res, 400, { error: "item_type, item_id, item_title, and item_url are required." });
+              return;
+            }
+            supabase.from("pins").insert({
+              board_id: boardId, user_id: userId,
+              item_type: itemType, item_id: itemId, item_title: itemTitle,
+              item_url: itemUrl, item_description: itemDescription
+            }).select().single().then(function(ir) {
+              if (ir.error) { db.json(res, 500, { error: ir.error.message }); return; }
+              db.json(res, 201, { pin: ir.data });
+            }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+          }).catch(function() { db.json(res, 400, { error: "Invalid JSON body" }); });
+        }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    return;
+  }
+
+  // ── Pins: Remove a pin from a board ──
+  // DELETE /api/boards/:boardId/pins/:pinId
+  if (pathname.match(/^\/api\/boards\/[^\/]+\/pins\/[^\/]+$/) && req.method === "DELETE") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      db.json(res, 401, { error: "Authentication required" });
+      return;
+    }
+    var token = authHeader.split(" ")[1];
+    var parts = pathname.split("/");
+    var boardId = parts[3];
+    var pinId = parts[5];
+    var supabase = db.getClient();
+    supabase.auth.getUser(token).then(function(r) {
+      if (r.error || !r.data.user) { db.json(res, 401, { error: "Invalid token" }); return; }
+      var userId = r.data.user.id;
+      supabase.from("pins").delete().eq("id", pinId).eq("user_id", userId)
+        .then(function(dr) {
+          if (dr.error) { db.json(res, 500, { error: dr.error.message }); return; }
+          db.json(res, 200, { status: "deleted" });
+        }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    return;
+  }
+
   // Profile page
   if (pathname === "/profile") {
     servePage(res, "profile.html");
+    return;
+  }
+
+  // Boards page
+  if (pathname === "/boards") {
+    servePage(res, "boards.html");
     return;
   }
 
