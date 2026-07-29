@@ -97,36 +97,46 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Legal pages
+  // Legal & support pages
   if (pathname === "/privacy") {
-    servePage(res, "privacy.html");
-    return;
-  }
+      servePage(res, "privacy.html");
+      return;
+    }
 
-  if (pathname === "/terms") {
-    servePage(res, "terms.html");
-    return;
-  }
+    if (pathname === "/terms") {
+      servePage(res, "terms.html");
+      return;
+    }
 
-  if (pathname === "/cookies") {
-    servePage(res, "cookies.html");
-    return;
-  }
+    if (pathname === "/cookies") {
+      servePage(res, "cookies.html");
+      return;
+    }
 
-  if (pathname === "/data-deletion") {
-    servePage(res, "data-deletion.html");
-    return;
-  }
+    if (pathname === "/dmca") {
+      servePage(res, "dmca.html");
+      return;
+    }
 
-  if (pathname === "/health-disclosure") {
-    servePage(res, "health-disclosure.html");
-    return;
-  }
+    if (pathname === "/data-deletion") {
+      servePage(res, "data-deletion.html");
+      return;
+    }
 
-  if (pathname === "/accessibility") {
-    servePage(res, "accessibility.html");
-    return;
-  }
+    if (pathname === "/health-disclosure") {
+      servePage(res, "health-disclosure.html");
+      return;
+    }
+
+    if (pathname === "/accessibility") {
+      servePage(res, "accessibility.html");
+      return;
+    }
+
+    if (pathname === "/contact") {
+      servePage(res, "contact.html");
+      return;
+    }
 
   // Page routes
   if (pathname === "/") {
@@ -144,9 +154,14 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 404
-  res.writeHead(404, { "Content-Type": "text/plain" });
-  res.end("Not found");
+  // 404 — custom error page
+  res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+  try {
+    const notFoundContent = fs.readFileSync(path.join(SITE_DIR, "src", "pages", "404.html"));
+    res.end(notFoundContent);
+  } catch {
+    res.end("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>Page not found — Stride</title></head><body><h1>Page not found</h1><p><a href=\"/\">Back to Stride</a></p></body></html>");
+  }
 });
 
 server.listen(PORT, "0.0.0.0", () => {
