@@ -111,6 +111,9 @@
       html += (SOURCE_LABELS[plat] || "manual entry");
       html += '</span>';
     }
+    if (a.isAutoPosted) {
+      html += '<span class="auto-posted-label">auto-posted</span>';
+    }
     if (a.location && a.location.city) {
       var loc = a.location.city + (a.location.state ? ", " + a.location.state : "");
       html += '<span class="activity-location">' + loc + '</span>';

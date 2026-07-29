@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auto-post settings — Stride</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav">
+      <a href="/races" class="nav-link">Races</a>
+      <a href="/resources" class="nav-link">Resources</a>
+      <a href="/community" class="nav-link">Community</a>
+      <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container-narrow py-12">
+
+    <h1 class="section-heading" style="font-size:36px;">Auto-post settings</h1>
+    <p class="text-muted mt-3 text-base leading-relaxed">
+      When you connect a device, Stride can automatically share your activities to the community feed.
+      Auto-post is off by default — you choose what to share.
+    </p>
+
+    <!-- Per-platform toggles -->
+    <div class="mt-10">
+      <h2 class="font-display text-xl font-bold mb-4">Connected devices</h2>
+
+      <div class="flex flex-col gap-3" id="platform-list">
+        <!-- Garmin -->
+        <div class="card-dark platform-card" data-platform="garmin">
+          <div class="platform-card-inner">
+            <div class="platform-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="10,2 22,12 10,22 10,14 2,14 2,10 10,10"/></svg>
+            </div>
+            <div class="platform-info">
+              <span class="platform-name">Garmin Connect</span>
+              <span class="platform-desc">Automatically share runs and rides from Garmin Connect</span>
+            </div>
+            <div class="platform-status">
+              <span class="status-indicator status-disconnected">Not connected</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" class="toggle-input" data-platform="garmin">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Strava -->
+        <div class="card-dark platform-card" data-platform="strava">
+          <div class="platform-card-inner">
+            <div class="platform-icon" style="color:#FC4C02;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,18 12,6 18,18"/><polyline points="9,14 12,10 15,14"/></svg>
+            </div>
+            <div class="platform-info">
+              <span class="platform-name">Strava</span>
+              <span class="platform-desc">Automatically share runs and rides from Strava</span>
+            </div>
+            <div class="platform-status">
+              <span class="status-indicator status-disconnected">Not connected</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" class="toggle-input" data-platform="strava">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Coros -->
+        <div class="card-dark platform-card" data-platform="coros">
+          <div class="platform-card-inner">
+            <div class="platform-icon" style="color:var(--lime);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="7"/><path d="M12 8V6"/><path d="M12 17v1"/><path d="M8 12H6"/><path d="M18 12h-2"/></svg>
+            </div>
+            <div class="platform-info">
+              <span class="platform-name">Coros</span>
+              <span class="platform-desc">Automatically share runs and rides from Coros</span>
+            </div>
+            <div class="platform-status">
+              <span class="status-indicator status-disconnected">Not connected</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" class="toggle-input" data-platform="coros">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Apple Health -->
+        <div class="card-dark platform-card" data-platform="apple_health">
+          <div class="platform-card-inner">
+            <div class="platform-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 13.5c-.2 2.5-2.3 4.5-4.8 4.5-1.7 0-3-1-4-2-1 1-2.3 2-4 2-2.5 0-4.5-2-4.8-4.5-.1-1 .1-2 .6-2.7C5.5 8.5 9 6 12 6s6.5 2.5 8.2 4.8c.5.7.7 1.7.6 2.7z"/></svg>
+            </div>
+            <div class="platform-info">
+              <span class="platform-name">Apple Health</span>
+              <span class="platform-desc">Automatically share runs, walks, and workouts from Apple Health</span>
+            </div>
+            <div class="platform-status">
+              <span class="status-indicator status-disconnected">Not connected</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" class="toggle-input" data-platform="apple_health">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Amazfit -->
+        <div class="card-dark platform-card" data-platform="amazfit">
+          <div class="platform-card-inner">
+            <div class="platform-icon" style="color:var(--violet);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="12" r="4"/></svg>
+            </div>
+            <div class="platform-info">
+              <span class="platform-name">Amazfit</span>
+              <span class="platform-desc">Automatically share runs and workouts from Amazfit</span>
+            </div>
+            <div class="platform-status">
+              <span class="status-indicator status-disconnected">Not connected</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" class="toggle-input" data-platform="amazfit">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Suunto -->
+        <div class="card-dark platform-card" data-platform="suunto">
+          <div class="platform-card-inner">
+            <div class="platform-icon" style="color:var(--magenta);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="platform-info">
+              <span class="platform-name">Suunto</span>
+              <span class="platform-desc">Automatically share runs, rides, and swims from Suunto</span>
+            </div>
+            <div class="platform-status">
+              <span class="status-indicator status-disconnected">Not connected</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" class="toggle-input" data-platform="suunto">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity type filter -->
+    <div class="mt-10">
+      <h2 class="font-display text-xl font-bold mb-4">Activity types to share</h2>
+      <p class="text-sm text-muted mb-4">Choose which activity types are auto-posted when you enable device sharing.</p>
+
+      <div class="card-dark">
+        <div class="flex flex-col gap-3">
+          <label class="checkbox-row">
+            <input type="checkbox" class="activity-checkbox" data-type="run" checked>
+            <span class="checkbox-label">Runs</span>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" class="activity-checkbox" data-type="ride">
+            <span class="checkbox-label">Rides</span>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" class="activity-checkbox" data-type="swim">
+            <span class="checkbox-label">Swims</span>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" class="activity-checkbox" data-type="walk">
+            <span class="checkbox-label">Walks</span>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" class="activity-checkbox" data-type="workout">
+            <span class="checkbox-label">Workouts</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Privacy note -->
+    <div class="mt-8">
+      <div class="card-surface3" style="border-left:3px solid var(--violet);">
+        <p class="text-sm text-muted leading-relaxed">
+          <strong>Privacy note:</strong> Auto-posted activities are visible to your segment community.
+          You can delete any post after it's shared. Stride never shares your data with third parties
+          without your consent.
+        </p>
+      </div>
+    </div>
+
+    <!-- Save button -->
+    <div class="mt-8">
+      <button class="btn btn-primary" id="save-settings" style="padding:12px 32px;font-size:14px;">
+        Save settings
+      </button>
+      <span id="save-feedback" class="text-sm text-muted ml-4 hidden">Settings saved</span>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p>Stride — Built for every runner</p>
+  <div class="links"><a href="/races" class="nav-link">Races</a><a href="/resources" class="nav-link">Resources</a><a href="/community">Community</a><span aria-hidden="true" style="color:var(--text-dim);margin:0 8px;">|</span><a href="/contact" class="nav-link">Contact</a>
+    <a href="/privacy" class="nav-link">Privacy</a><a href="/terms" class="nav-link">Terms</a><a href="/cookies" class="nav-link">Cookies</a><a href="/dmca" class="nav-link">DMCA</a>
+    <a href="/data-deletion" class="nav-link">Data deletion</a><a href="/health-disclosure" class="nav-link">Health disclosure</a><a href="/accessibility" class="nav-link">Accessibility</a></div>
+</footer>
+
+<script>
+(function() {
+  var saveBtn = document.getElementById('save-settings');
+  var feedback = document.getElementById('save-feedback');
+
+  saveBtn.addEventListener('click', function() {
+    var toggles = document.querySelectorAll('.toggle-input');
+    var checks = document.querySelectorAll('.activity-checkbox');
+    var settings = { platforms: {}, activities: {} };
+
+    toggles.forEach(function(t) {
+      settings.platforms[t.getAttribute('data-platform')] = t.checked;
+    });
+    checks.forEach(function(c) {
+      settings.activities[c.getAttribute('data-type')] = c.checked;
+    });
+
+    // Persist to localStorage for demo purposes
+    try {
+      localStorage.setItem('stride-auto-post-settings', JSON.stringify(settings));
+      feedback.classList.remove('hidden');
+      setTimeout(function() { feedback.classList.add('hidden'); }, 2500);
+    } catch(e) {
+      feedback.textContent = 'Could not save settings';
+      feedback.style.color = 'var(--magenta)';
+      feedback.classList.remove('hidden');
+    }
+  });
+
+  // Load saved settings on page load
+  try {
+    var saved = JSON.parse(localStorage.getItem('stride-auto-post-settings'));
+    if (saved) {
+      if (saved.platforms) {
+        Object.keys(saved.platforms).forEach(function(key) {
+          var el = document.querySelector('.toggle-input[data-platform="' + key + '"]');
+          if (el) el.checked = saved.platforms[key];
+        });
+      }
+      if (saved.activities) {
+        Object.keys(saved.activities).forEach(function(key) {
+          var el = document.querySelector('.activity-checkbox[data-type="' + key + '"]');
+          if (el) el.checked = saved.activities[key];
+        });
+      }
+    }
+  } catch(e) {}
+})();
+</script>
+
+<script>
+(function() {
+  if (localStorage.getItem('cookieConsent') === 'true') return;
+  var banner = document.createElement('div');
+  banner.id = 'cookie-banner';
+  banner.innerHTML = '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--surface-1);border-top:1px solid var(--border-visible);padding:16px 24px;z-index:9999;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 -2px 12px rgba(0,0,0,0.06);"><p style="font-size:13px;color:var(--text-muted);margin:0;flex:1;min-width:200px;">Stride uses cookies for core functionality, analytics, and affiliate links. See our <a href="/cookies" style="color:var(--cobalt);text-decoration:underline;">Cookie Policy</a> for details.</p><div style="display:flex;gap:8px;flex-shrink:0;"><button id="cookie-accept" class="btn btn-primary" style="padding:10px 20px;font-size:13px;">Accept all</button><a href="/cookies" class="btn btn-secondary" style="padding:10px 20px;font-size:13px;">Cookie settings</a></div></div>';
+  document.body.appendChild(banner);
+  document.getElementById('cookie-accept').addEventListener('click', function() {
+    localStorage.setItem('cookieConsent', 'true');
+    document.getElementById('cookie-banner').remove();
+  });
+})();
+</script>
+
+</body>
+</html>
