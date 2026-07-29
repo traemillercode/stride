@@ -121,7 +121,11 @@
   header += '<span style="color:' + segment.accentColor + ';font-weight:600;">' + segment.memberCount + ' members</span>';
   header += '<span class="text-muted">•</span>';
   header += '<span class="text-muted">Active daily</span>';
-  header += '</div></div></div>';
+  header += '</div>';
+  header += '<div class="mt-4">';
+  header += '<button class="btn btn-primary" style="font-size:13px;padding:10px 20px;">Join this group</button>';
+  header += '</div>';
+  header += '</div></div>';
   container.innerHTML = header;
 
   // Pace spaces links
