@@ -97,6 +97,17 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Content pages
+  if (pathname === "/races") {
+    servePage(res, "races.html");
+    return;
+  }
+
+  if (pathname === "/news") {
+    servePage(res, "news.html");
+    return;
+  }
+
   // Legal & support pages
   if (pathname === "/privacy") {
       servePage(res, "privacy.html");
