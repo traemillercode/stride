@@ -48,6 +48,23 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // GET /api/news — returns the news feed JSON
+  if (pathname === "/api/news") {
+    try {
+      var newsPath = path.join(SITE_DIR, "src", "static", "news-feed.json");
+      if (fs.existsSync(newsPath)) {
+        serveFile(res, newsPath);
+      } else {
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-cache" });
+        res.end("[]");
+      }
+    } catch (e) {
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-cache" });
+      res.end("[]");
+    }
+    return;
+  }
+
   // ── Webhook endpoint: receive activity data from connected devices ──
   // POST /api/webhook/activity
   // Accepts JSON payload with activity data from Garmin, Strava, Coros, Apple Health, Amazfit, Suunto.
