@@ -45,7 +45,8 @@
     step: 1,
     totalSteps: 3,
     weeklyMileage: 10,
-    goalDistance: "Half Marathon",
+    goalDistance: 13.1,
+    goalDistanceUnit: "mi",
     goalRaceDate: "",
     hasRunBefore: null,
     motivation: "",
@@ -162,6 +163,14 @@
     });
   }
 
+  function getDistanceLabel(miles) {
+    if (miles <= 3.2) return "5K";
+    if (miles <= 6.3) return "10K";
+    if (miles <= 14) return "Half Marathon";
+    if (miles <= 27) return "Marathon";
+    return "Ultra";
+  }
+
   function fieldGroup(label) {
     var div = h("div", { className: "mb-6" });
     var lbl = h("label", { text: label });
@@ -227,9 +236,110 @@
 
       // Goal distance
       var g2 = fieldGroup("Goal race distance");
-      var distGrid = h("div", { className: "grid grid-cols-3 sm:grid-cols-5 gap-2" });
-      toggleBtnGroup(distGrid, DISTANCES, state.goalDistance, function(d) { state.goalDistance = d; render(); });
-      g2.appendChild(distGrid);
+
+      // Numeric input + stepper row
+      var distInputRow = h("div", { className: "flex items-center gap-2" });
+      var stepAmount = state.goalDistanceUnit === "mi" ? 0.1 : 0.1;
+      var displayValue = state.goalDistanceUnit === "mi"
+        ? Math.round(state.goalDistance * 10) / 10
+        : Math.round(state.goalDistance * 1.60934 * 10) / 10;
+
+      // Minus stepper button
+      var minusBtn = h("button", {
+        type: "button",
+        className: "btn btn-stepper",
+        text: "−",
+        style: { width: "44px", height: "52px", fontSize: "20px", fontWeight: "700", padding: "0", lineHeight: "1" },
+        onclick: function() {
+          var d = state.goalDistanceUnit === "mi" ? state.goalDistance : state.goalDistance * 1.60934;
+          d = Math.max(0.1, Math.round((d - 0.1) * 10) / 10);
+          state.goalDistance = state.goalDistanceUnit === "mi" ? d : Math.round((d / 1.60934) * 10) / 10;
+          render();
+        },
+      });
+
+      // Number input
+      var distInput = h("input", {
+        type: "number",
+        value: String(displayValue),
+        min: "0.1",
+        max: "500",
+        step: "0.1",
+        style: { width: "120px", height: "52px", fontSize: "24px", fontWeight: "700", textAlign: "center", fontFamily: "'Barlow Condensed', sans-serif", color: "var(--charcoal)", background: "#fff", border: "1px solid var(--border-visible)", borderRadius: "var(--radius)" },
+        oninput: function(e) {
+          var v = parseFloat(e.target.value);
+          if (!isNaN(v) && v > 0) {
+            state.goalDistance = state.goalDistanceUnit === "mi" ? Math.round(v * 10) / 10 : Math.round((v / 1.60934) * 10) / 10;
+          }
+        },
+      });
+
+      // Plus stepper button
+      var plusBtn = h("button", {
+        type: "button",
+        className: "btn btn-stepper",
+        text: "+",
+        style: { width: "44px", height: "52px", fontSize: "20px", fontWeight: "700", padding: "0", lineHeight: "1" },
+        onclick: function() {
+          var d = state.goalDistanceUnit === "mi" ? state.goalDistance : state.goalDistance * 1.60934;
+          d = Math.round((d + 0.1) * 10) / 10;
+          state.goalDistance = state.goalDistanceUnit === "mi" ? d : Math.round((d / 1.60934) * 10) / 10;
+          render();
+        },
+      });
+
+      distInputRow.appendChild(minusBtn);
+      distInputRow.appendChild(distInput);
+      distInputRow.appendChild(plusBtn);
+
+      // Unit toggle (mi / km)
+      var unitTog = h("div", { className: "inline-flex", style: { border: "1px solid var(--border-visible)", borderRadius: "var(--radius)", overflow: "hidden" } });
+      ["mi", "km"].forEach(function(u) {
+        var isActive = state.goalDistanceUnit === u;
+        var ub = h("button", {
+          type: "button",
+          text: u,
+          style: { padding: "8px 14px", fontSize: "13px", fontWeight: "600", border: "none", borderRadius: "0", cursor: "pointer", background: isActive ? "var(--cobalt)" : "transparent", color: isActive ? "#fff" : "var(--text-muted)" },
+          onclick: function() {
+            if (state.goalDistanceUnit === u) return;
+            // Convert stored value (always in miles) for display
+            state.goalDistanceUnit = u;
+            render();
+          },
+        });
+        unitTog.appendChild(ub);
+      });
+
+      var unitRow = h("div", { className: "flex items-center gap-3 mt-2" });
+      unitRow.appendChild(h("span", { className: "text-sm text-muted", text: state.goalDistanceUnit === "mi" ? "miles" : "kilometers" }));
+      unitRow.appendChild(unitTog);
+
+      // Quick-select chips
+      var chipData = [
+        { label: "5K", miles: 3.1 },
+        { label: "10K", miles: 6.2 },
+        { label: "Half Marathon", miles: 13.1 },
+        { label: "Marathon", miles: 26.2 },
+      ];
+      var chipRow = h("div", { className: "flex flex-wrap gap-2 mt-3" });
+      var tolerance = 0.2;
+      chipData.forEach(function(chip) {
+        var isActive = Math.abs(state.goalDistance - chip.miles) < tolerance;
+        var chipBtn = h("button", {
+          type: "button",
+          className: "btn " + (isActive ? "btn-primary" : "btn-secondary"),
+          style: { fontSize: "12px", padding: "8px 14px" },
+          text: chip.label,
+          onclick: function() {
+            state.goalDistance = chip.miles;
+            render();
+          },
+        });
+        chipRow.appendChild(chipBtn);
+      });
+      g2.appendChild(distInputRow);
+      g2.appendChild(unitRow);
+      g2.appendChild(chipRow);
       form.appendChild(g2);
 
       // Race date
@@ -455,7 +565,7 @@
       }
       dl.appendChild(rr("Path", segment.label));
       dl.appendChild(rr("Weekly mileage", state.weeklyMileage + " miles"));
-      dl.appendChild(rr("Goal distance", state.goalDistance));
+      dl.appendChild(rr("Goal distance", state.goalDistance + " " + state.goalDistanceUnit + " (" + getDistanceLabel(state.goalDistance) + ")"));
       dl.appendChild(rr("Race date", state.goalRaceDate || "Not set"));
       if (state.availableDays.length) dl.appendChild(rr("Run days", state.availableDays.join(", ")));
       dl.appendChild(rr("Rest day", state.restDay));
@@ -471,7 +581,7 @@
         dl.appendChild(rr("Prior time", prt));
       }
       if (segSlug === "competitive" && (state.currentPR.hours || state.currentPR.minutes)) {
-        dl.appendChild(rr("Recent race distance", state.currentPRDistance || state.goalDistance));
+        dl.appendChild(rr("Recent race distance", state.currentPRDistance || getDistanceLabel(state.goalDistance)));
         var pr = (state.currentPR.hours || "0") + ":" + (state.currentPR.minutes || "00") + ":" + (state.currentPR.seconds || "00");
         dl.appendChild(rr("Recent race time", pr));
       }
@@ -563,11 +673,11 @@
 
     var plan = buildPlan({
       segment: segKey,
-      goalDistance: state.goalDistance,
+      goalDistance: getDistanceLabel(state.goalDistance),
       goalRaceDate: state.goalRaceDate,
       weeklyMileage: state.weeklyMileage,
       recentRaceTimeSecs: raceTimeSecs || undefined,
-      recentRaceDistance: raceTimeSecs ? (state.currentPRDistance || state.goalDistance) : undefined,
+      recentRaceDistance: raceTimeSecs ? (state.currentPRDistance || getDistanceLabel(state.goalDistance)) : undefined,
       injuryHistory: segSlug === "returner" && state.comingFromInjury ? state.injuryDescription : undefined,
       elevationGain: state.elevationGain || undefined,
       // New onboarding depth options

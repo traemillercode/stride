@@ -103,6 +103,8 @@ img { max-width: 100%; display: block; }
 .btn-primary { background: var(--cobalt); color: #fff; border-color: var(--cobalt); }
 .btn-secondary { background: transparent; color: var(--charcoal); border-color: var(--border-visible); }
 .btn-secondary:hover { border-color: rgba(26,26,26,0.3); }
+.btn-stepper { background: var(--surface-2); color: var(--charcoal); border: 1px solid var(--border-visible); }
+.btn-stepper:hover { background: var(--surface-3); border-color: rgba(26,26,26,0.3); }
 .btn-violet { background: var(--violet); color: #fff; border-color: var(--violet); }
 
 /* ── Form ── */
