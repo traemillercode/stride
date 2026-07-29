@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130" width="100" height="130">
+  <!-- Olympic pictogram-style runner — abstracted geometric mid-stride figure -->
+  <!-- Head -->
+  <circle cx="50" cy="16" r="7" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Torso (forward lean) -->
+  <path d="M50 23 L44 58" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Left arm (forward, bent at elbow) -->
+  <path d="M50 27 L62 22 L73 32" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Right arm (back, bent at elbow) -->
+  <path d="M50 27 L37 33 L29 47" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Left leg (forward stride, bent knee) -->
+  <path d="M44 58 L57 66 L68 84" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Right leg (trailing back) -->
+  <path d="M44 58 L32 71 L24 92" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Left foot -->
+  <path d="M68 84 L74 86" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+  <!-- Right foot -->
+  <path d="M24 92 L18 90" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+</svg>
