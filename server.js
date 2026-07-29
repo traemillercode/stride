@@ -232,6 +232,27 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Resource pages
+  if (pathname === "/resources/nutrition") {
+    servePage(res, "nutrition.html");
+    return;
+  }
+
+  if (pathname === "/resources/gear") {
+    servePage(res, "gear.html");
+    return;
+  }
+
+  if (pathname === "/resources/playlist") {
+    servePage(res, "playlist.html");
+    return;
+  }
+
+  if (pathname === "/resources/form-guide") {
+    servePage(res, "form-guide.html");
+    return;
+  }
+
   // Content pages
   if (pathname === "/races") {
     servePage(res, "races.html");
