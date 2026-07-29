@@ -953,6 +953,27 @@ margin-bottom: 12px;
   user-select: none;
 }
 
+/* ── Directory cards ── */
+.dir-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border: 1px solid var(--border-visible);
+  border-radius: 8px;
+  padding: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.dir-card:hover {
+  border-color: var(--cobalt);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.dir-card-icon {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
 /* ── Hidden utility ── */
 .hidden { display: none; }
 .ml-4 { margin-left: 16px; }
