@@ -184,7 +184,7 @@
 
 <footer class="site-footer">
   <p>Stride — Built for every runner</p>
-  <div class="links"><a href="/races" class="nav-link">Races</a><a href="/resources" class="nav-link">Resources</a><a href="/community">Community</a></div>
+  <div class="links"><a href="/races" class="nav-link">Races</a><a href="/resources" class="nav-link">Resources</a><a href="/community">Community</a><span aria-hidden="true" style="color:var(--text-dim);margin:0 8px;">|</span><a href="/privacy" class="nav-link">Privacy</a><a href="/terms" class="nav-link">Terms</a><a href="/cookies" class="nav-link">Cookies</a></div>
 </footer>
 
 <script src="/static/moderation.js"></script>
@@ -208,3 +208,20 @@
   } catch(e) {}
 })();
 </script>
+
+<script>
+(function() {
+  if (localStorage.getItem('cookieConsent') === 'true') return;
+  var banner = document.createElement('div');
+  banner.id = 'cookie-banner';
+  banner.innerHTML = '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--surface-1);border-top:1px solid var(--border-visible);padding:16px 24px;z-index:9999;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 -2px 12px rgba(0,0,0,0.06);"><p style="font-size:13px;color:var(--text-muted);margin:0;flex:1;min-width:200px;">Stride uses cookies for core functionality, analytics, and affiliate links. See our <a href="/cookies" style="color:var(--cobalt);text-decoration:underline;">Cookie Policy</a> for details.</p><div style="display:flex;gap:8px;flex-shrink:0;"><button id="cookie-accept" class="btn btn-primary" style="padding:10px 20px;font-size:13px;">Accept all</button><a href="/cookies" class="btn btn-secondary" style="padding:10px 20px;font-size:13px;">Cookie settings</a></div></div>';
+  document.body.appendChild(banner);
+  document.getElementById('cookie-accept').addEventListener('click', function() {
+    localStorage.setItem('cookieConsent', 'true');
+    document.getElementById('cookie-banner').remove();
+  });
+})();
+</script>
+
+</body>
+</html>
