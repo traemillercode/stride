@@ -101,7 +101,7 @@
     return name.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().substring(0, 2);
   }
 
-  function renderProfile(user, activities, stats) {
+  function renderProfile(user, activities, stats, userCircles) {
     var html = '';
 
     // Profile header
@@ -127,6 +127,25 @@
     html += '<div class="stat-card"><div class="stat-value">' + formatPace(stats.avgPace) + '</div><div class="stat-label">Avg pace</div></div>';
     html += '<div class="stat-card"><div class="stat-value">' + (stats.activityCount || 0) + '</div><div class="stat-label">Activities</div></div>';
     html += '</div>';
+
+    // My Circles
+    html += '<h2 class="section-title">My circles</h2>';
+    if (!userCircles || !userCircles.length) {
+      html += '<div class="empty-state" style="padding:20px;border:1px dashed var(--border-visible);border-radius:var(--radius);">';
+      html += '<p style="font-size:14px;">Not a member of any circles yet.</p>';
+      html += '<a href="/community/circles" class="btn btn-primary" style="margin-top:12px;font-size:13px;">Discover circles</a>';
+      html += '</div>';
+    } else {
+      html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+      userCircles.forEach(function(c) {
+        html += '<a href="/community/circles/' + c.id + '" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">';
+        html += '<div><span style="font-weight:600;font-size:14px;">' + (c.name || 'Circle') + '</span>';
+        html += '<span style="font-size:12px;color:var(--text-dim);margin-left:12px;">' + (c.member_count || 1) + ' member' + ((c.member_count || 1) !== 1 ? 's' : '') + '</span></div>';
+        html += '<span style="font-size:12px;color:var(--cobalt);font-weight:600;">View →</span>';
+        html += '</a>';
+      });
+      html += '</div>';
+    }
 
     // Activity feed
     html += '<h2 class="section-title">Recent activities</h2>';
@@ -178,10 +197,29 @@
 
       // Fetch profile data from API
       var profileUrl = '/api/profile?userId=' + encodeURIComponent(viewingUserId || user.id);
+
       fetch(profileUrl)
         .then(function(res) { return res.json(); })
         .then(function(data) {
-          renderProfile(data.user || { id:user.id, display_name:user.user_metadata.display_name || user.email, created_at:user.created_at }, data.activities || [], data.stats || {});
+          // If viewing own profile, also fetch circles
+          if (!viewingUserId) {
+            StrideAuth.getSession(function(err, session) {
+              if (err || !session) {
+                renderProfile(data.user || { id:user.id, display_name:user.user_metadata.display_name || user.email, created_at:user.created_at }, data.activities || [], data.stats || {}, []);
+                return;
+              }
+              fetch('/api/circles', { headers: { 'Authorization': 'Bearer ' + session.access_token } })
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                  renderProfile(data.user || { id:user.id, display_name:user.user_metadata.display_name || user.email, created_at:user.created_at }, data.activities || [], data.stats || {}, (d.circles || []).slice(0, 5));
+                })
+                .catch(function() {
+                  renderProfile(data.user || { id:user.id, display_name:user.user_metadata.display_name || user.email, created_at:user.created_at }, data.activities || [], data.stats || {}, []);
+                });
+            });
+          } else {
+            renderProfile(data.user || { id:user.id, display_name:user.user_metadata.display_name || user.email, created_at:user.created_at }, data.activities || [], data.stats || {}, []);
+          }
         })
         .catch(function() {
           // API not available — render from auth data
@@ -189,7 +227,7 @@
             id: user.id,
             display_name: (user.user_metadata && user.user_metadata.display_name) || user.email,
             created_at: user.created_at
-          }, [], { followers:0, following:0, totalMiles:0, avgPace:0, activityCount:0 });
+          }, [], { followers:0, following:0, totalMiles:0, avgPace:0, activityCount:0 }, []);
         });
 
       renderNavAuth({ id:user.id, display_name:(user.user_metadata && user.user_metadata.display_name) || user.email });

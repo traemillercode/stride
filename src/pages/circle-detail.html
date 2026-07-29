@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circle — Stride</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="/static/brand-mark.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/static/supabase.js"></script>
+<style>
+  .detail-container { max-width:800px; margin:40px auto; padding:0 24px; }
+  .circle-header { margin-bottom:32px; }
+  .circle-name { font-family:'Barlow Condensed',sans-serif; font-size:36px; font-weight:800; line-height:1.1; }
+  .circle-desc { font-size:15px; color:var(--text-muted); margin-top:8px; line-height:1.6; }
+  .circle-meta-row { display:flex; gap:24px; margin-top:16px; font-size:13px; color:var(--text-dim); flex-wrap:wrap; align-items:center; }
+  .circle-meta-row strong { color:var(--charcoal); font-weight:700; }
+  .circle-badge { display:inline-block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; padding:3px 10px; border-radius:20px; }
+  .badge-public { background:rgba(30,94,245,0.12); color:var(--cobalt); }
+  .badge-private { background:rgba(108,60,225,0.12); color:var(--violet); }
+  .join-code-display { font-family:monospace; font-size:13px; background:var(--surface-3); padding:4px 10px; border-radius:var(--radius); color:var(--charcoal); }
+  .actions-row { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
+  .section-title { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:700; margin-bottom:14px; margin-top:36px; color:var(--charcoal); }
+  .member-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:14px 18px; margin-bottom:8px; display:flex; align-items:center; gap:12px; }
+  .member-avatar { width:36px; height:36px; border-radius:50%; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:var(--text-muted); flex-shrink:0; }
+  .member-name { font-weight:600; font-size:14px; }
+  .member-role { font-size:11px; color:var(--text-dim); }
+  .owner-badge { font-size:10px; font-weight:700; text-transform:uppercase; padding:2px 8px; border-radius:20px; background:rgba(30,94,245,0.12); color:var(--cobalt); margin-left:8px; }
+  .activity-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:8px; display:flex; align-items:center; gap:14px; }
+  .activity-icon { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .activity-icon.run { background:rgba(30,94,245,0.1); color:var(--cobalt); }
+  .activity-details { flex:1; }
+  .activity-type { font-weight:700; font-size:13px; }
+  .activity-stats { font-size:12px; color:var(--text-muted); margin-top:2px; }
+  .activity-source { font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .delete-btn { background:none; border:1px solid var(--border-visible); border-radius:var(--radius); padding:8px 16px; font-size:12px; font-family:inherit; color:var(--text-dim); cursor:pointer; }
+  .delete-btn:hover { color:var(--magenta); border-color:var(--magenta); }
+  .loading { text-align:center; padding:80px 20px; color:var(--text-muted); }
+  .error-state { text-align:center; padding:80px 20px; color:var(--text-muted); }
+  .empty-state { text-align:center; padding:40px 20px; color:var(--text-muted); border:1px dashed var(--border-visible); border-radius:var(--radius); }
+
+  .user-nav { display:flex; align-items:center; gap:12px; }
+  .user-nav-avatar { width:32px; height:32px; border-radius:50%; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--text-muted); }
+  .user-nav-name { font-size:13px; font-weight:600; color:var(--charcoal); }
+  .sign-out-btn { font-size:12px; color:var(--text-muted); cursor:pointer; background:none; border:none; font-family:inherit; padding:0; }
+  .sign-out-btn:hover { color:var(--magenta); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav" id="main-nav">
+      <a href="/races" class="nav-link">Races</a>
+      <a href="/resources" class="nav-link">Resources</a>
+      <a href="/community" class="nav-link" style="font-weight:600;color:var(--cobalt);">Community</a>
+      <span id="nav-auth-area"></span>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="detail-container" id="detail-content">
+    <div class="loading">Loading circle...</div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p>Stride — Built for every runner</p>
+  <div class="links"><a href="/races" class="nav-link">Races</a><a href="/resources" class="nav-link">Resources</a><a href="/community">Community</a><span aria-hidden="true" style="color:var(--text-dim);margin:0 8px;">|</span><a href="/contact" class="nav-link">Contact</a>
+    <a href="/privacy" class="nav-link">Privacy</a><a href="/terms" class="nav-link">Terms</a><a href="/cookies" class="nav-link">Cookies</a><a href="/dmca" class="nav-link">DMCA</a>
+    <a href="/data-deletion" class="nav-link">Data deletion</a><a href="/health-disclosure" class="nav-link">Health disclosure</a><a href="/accessibility" class="nav-link">Accessibility</a></div>
+</footer>
+
+<script>
+(function() {
+  var container = document.getElementById('detail-content');
+  var navAuth = document.getElementById('nav-auth-area');
+  var currentUser = null;
+  var circleData = null;
+
+  // Extract circle ID from URL: /community/circles/:id
+  var pathParts = window.location.pathname.split('/');
+  var circleId = pathParts[pathParts.length - 1];
+
+  function getInitials(name) {
+    if (!name) return '?';
+    return name.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().substring(0, 2);
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    var d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  }
+
+  function formatPace(secsPerMi) {
+    if (!secsPerMi) return '--';
+    var min = Math.floor(secsPerMi / 60);
+    var sec = Math.round(secsPerMi % 60);
+    return min + ':' + (sec < 10 ? '0' : '') + sec + ' /mi';
+  }
+
+  function formatDistance(mi) {
+    if (!mi) return '--';
+    return parseFloat(mi).toFixed(1) + ' mi';
+  }
+
+  function getActivityIcon(type) {
+    var icons = { run:'🏃', ride:'🚴', swim:'🏊', walk:'🚶', workout:'💪' };
+    return icons[type] || '🏃';
+  }
+
+  function escHtml(s) {
+    if (!s) return '';
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function renderNavAuth(user) {
+    if (user) {
+      var dn = (user.user_metadata && user.user_metadata.display_name) || user.email || 'Runner';
+      navAuth.innerHTML =
+        '<div class="user-nav">' +
+          '<div class="user-nav-avatar">' + getInitials(dn) + '</div>' +
+          '<a href="/profile" class="user-nav-name">' + escHtml(dn) + '</a>' +
+          '<a href="/boards" class="user-nav-name" style="font-weight:700;">My boards</a>' +
+          '<button class="sign-out-btn" onclick="StrideAuth.signOut(function(){window.location.reload();})">Sign out</button>' +
+        '</div>';
+    } else {
+      navAuth.innerHTML = '<a href="/auth/signin" class="nav-link" style="font-weight:600;color:var(--cobalt);">Sign in</a>';
+    }
+  }
+
+  function getSession(cb) {
+    StrideAuth.getSession(function(err, session) {
+      cb(err, session);
+    });
+  }
+
+  function loadDetail() {
+    getSession(function(err, session) {
+      var headers = {};
+      if (session) headers['Authorization'] = 'Bearer ' + session.access_token;
+
+      fetch('/api/circles/' + circleId, { headers: headers })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.error) {
+            container.innerHTML = '<div class="error-state"><h2 class="font-display" style="font-size:24px;margin-bottom:12px;">' + escHtml(data.error) + '</h2><p><a href="/community/circles" class="btn btn-primary" style="margin-top:16px;">Back to circles</a></p></div>';
+            return;
+          }
+          circleData = data;
+
+          StrideAuth.getCurrentUser(function(uerr, user) {
+            currentUser = user;
+            if (user) renderNavAuth(user); else renderNavAuth(null);
+            renderDetail();
+          });
+        })
+        .catch(function() {
+          container.innerHTML = '<div class="error-state"><h2 class="font-display" style="font-size:24px;">Could not load circle</h2><p class="text-muted mt-2">The circle may have been deleted or the server is unavailable.</p><p><a href="/community/circles" class="btn btn-primary" style="margin-top:16px;">Back to circles</a></p></div>';
+        });
+    });
+  }
+
+  function renderDetail() {
+    var c = circleData.circle;
+    var members = circleData.members || [];
+    var activities = circleData.activities || [];
+    var isMember = circleData.is_member;
+    var isOwner = circleData.is_owner;
+
+    var html = '';
+
+    html += '<a href="/community/circles" class="text-sm" style="color:var(--violet);text-decoration:underline;">← Back to circles</a>';
+
+    // Circle header
+    html += '<div class="circle-header mt-4">';
+    html += '<h1 class="circle-name">' + escHtml(c.name) + '</h1>';
+    if (c.description) {
+      html += '<p class="circle-desc">' + escHtml(c.description) + '</p>';
+    }
+    html += '<div class="circle-meta-row">';
+    html += '<span class="circle-badge ' + (c.is_public ? 'badge-public' : 'badge-private') + '">' + (c.is_public ? 'Public' : 'Private') + '</span>';
+    html += '<span><strong>' + (c.member_count || 1) + '</strong> member' + ((c.member_count || 1) !== 1 ? 's' : '') + '</span>';
+    html += '<span>Created ' + formatDate(c.created_at) + '</span>';
+    if (!c.is_public && c.join_code && isMember) {
+      html += '<span class="join-code-display">Code: ' + escHtml(c.join_code) + '</span>';
+    }
+    html += '</div>';
+
+    // Actions
+    html += '<div class="actions-row">';
+    if (!currentUser) {
+      html += '<a href="/auth/signin" class="btn btn-primary" style="padding:10px 22px;">Sign in to join</a>';
+    } else if (isMember) {
+      if (!isOwner) {
+        html += '<button class="btn btn-secondary" id="leave-btn" style="padding:10px 22px;border-color:var(--magenta);color:var(--magenta);">Leave circle</button>';
+      }
+      if (isOwner) {
+        html += '<button class="delete-btn" id="delete-circle-btn">Delete circle</button>';
+      }
+    } else {
+      if (c.is_public) {
+        html += '<button class="btn btn-primary" id="join-btn" style="padding:10px 22px;">Join circle</button>';
+      } else {
+        html += '<span style="display:flex;gap:8px;align-items:center;">';
+        html += '<input type="text" id="join-code-input" placeholder="Enter join code" style="padding:10px 14px;width:160px;font-family:monospace;text-transform:uppercase;">';
+        html += '<button class="btn btn-primary" id="join-btn" style="padding:10px 22px;">Join</button>';
+        html += '</span>';
+      }
+    }
+    html += '</div>';
+    html += '</div>';
+
+    // Members section
+    html += '<h2 class="section-title">Members</h2>';
+    if (members.length === 0) {
+      html += '<div class="empty-state"><p>No members yet.</p></div>';
+    } else {
+      members.forEach(function(m) {
+        html += '<div class="member-card">';
+        html += '<div class="member-avatar">' + getInitials(m.display_name) + '</div>';
+        html += '<div><span class="member-name">' + escHtml(m.display_name) + '</span>';
+        if (m.role === 'owner') html += '<span class="owner-badge">Owner</span>';
+        html += '<div class="member-role">Joined ' + formatDate(m.joined_at) + '</div></div>';
+        html += '</div>';
+      });
+    }
+
+    // Activity feed
+    html += '<h2 class="section-title">Recent activity</h2>';
+    if (activities.length === 0) {
+      html += '<div class="empty-state"><p>No activities yet from circle members.</p></div>';
+    } else {
+      activities.forEach(function(a) {
+        html += '<div class="activity-card">';
+        html += '<div class="activity-icon ' + a.type + '">' + getActivityIcon(a.type) + '</div>';
+        html += '<div class="activity-details">';
+        html += '<div class="activity-type">' + (a.type || 'Run') + (a.route_name ? ': ' + a.route_name : '') + '</div>';
+        html += '<div class="activity-stats">' + formatDistance(a.distance_mi) + ' · ' + formatPace(a.avg_pace_secs) + (a.elevation_ft ? ' · ' + a.elevation_ft + 'ft' : '') + '</div>';
+        html += '<div class="activity-source">via ' + (a.source || 'manual') + ' · ' + formatDate(a.posted_at) + '</div>';
+        html += '</div></div>';
+      });
+    }
+
+    container.innerHTML = html;
+
+    // Hook up buttons
+    var joinBtn = document.getElementById('join-btn');
+    if (joinBtn) {
+      joinBtn.addEventListener('click', function() {
+        var joinCode = null;
+        if (!c.is_public) {
+          var input = document.getElementById('join-code-input');
+          if (input) joinCode = input.value.trim();
+          if (!joinCode) { alert('Please enter a join code.'); return; }
+        }
+        handleJoin(joinCode);
+      });
+    }
+
+    var leaveBtn = document.getElementById('leave-btn');
+    if (leaveBtn) {
+      leaveBtn.addEventListener('click', function() {
+        if (confirm('Leave this circle?')) handleLeave();
+      });
+    }
+
+    var deleteBtn = document.getElementById('delete-circle-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function() {
+        if (confirm('Delete this circle? This cannot be undone. All members will be removed.')) handleDelete();
+      });
+    }
+  }
+
+  function handleJoin(joinCode) {
+    getSession(function(err, session) {
+      if (err || !session) { alert('Please sign in.'); return; }
+      var body = {};
+      if (joinCode) body.join_code = joinCode;
+      fetch('/api/circles/' + circleId + '/join', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session.access_token
+        },
+        body: JSON.stringify(body)
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.error) { alert(data.error); return; }
+          loadDetail();
+        })
+        .catch(function() { alert('Failed to join circle.'); });
+    });
+  }
+
+  function handleLeave() {
+    getSession(function(err, session) {
+      if (err || !session) { alert('Please sign in.'); return; }
+      fetch('/api/circles/' + circleId + '/leave', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + session.access_token }
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.error) { alert(data.error); return; }
+          loadDetail();
+        })
+        .catch(function() { alert('Failed to leave circle.'); });
+    });
+  }
+
+  function handleDelete() {
+    getSession(function(err, session) {
+      if (err || !session) { alert('Please sign in.'); return; }
+      fetch('/api/circles/' + circleId, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + session.access_token }
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.error) { alert(data.error); return; }
+          window.location.href = '/community/circles';
+        })
+        .catch(function() { alert('Failed to delete circle.'); });
+    });
+  }
+
+  loadDetail();
+})();
+</script>
+
+<script>
+(function() {
+  if (localStorage.getItem('cookieConsent') === 'true') return;
+  var banner = document.createElement('div');
+  banner.id = 'cookie-banner';
+  banner.innerHTML = '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--surface-1);border-top:1px solid var(--border-visible);padding:16px 24px;z-index:9999;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 -2px 12px rgba(0,0,0,0.06);"><p style="font-size:13px;color:var(--text-muted);margin:0;flex:1;min-width:200px;">Stride uses cookies for core functionality, analytics, and affiliate links. See our <a href="/cookies" style="color:var(--cobalt);text-decoration:underline;">Cookie Policy</a> for details.</p><div style="display:flex;gap:8px;flex-shrink:0;"><button id="cookie-accept" class="btn btn-primary" style="padding:10px 20px;font-size:13px;">Accept all</button><a href="/cookies" class="btn btn-secondary" style="padding:10px 20px;font-size:13px;">Cookie settings</a></div></div>';
+  document.body.appendChild(banner);
+  document.getElementById('cookie-accept').addEventListener('click', function() {
+    localStorage.setItem('cookieConsent', 'true');
+    document.getElementById('cookie-banner').remove();
+  });
+})();
+</script>
+
+</body>
+</html>

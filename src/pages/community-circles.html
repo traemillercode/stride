@@ -1,187 +1,71 @@
-<!--
-  Data model extension for future database (Prisma schema):
-
-  model CommunitySpace {
-    id            String   @id @default(uuid())
-    name          String
-    slug          String   @unique
-    type          String   // segment | circle | pace_band
-    description   String?
-    parentSpaceId String?  // for nesting circles under segments
-    joinCode      String?  // for invite-based circles
-    paceBandMin   Float?   // min pace in min/mi for pace_band spaces
-    paceBandMax   Float?   // max pace in min/mi for pace_band spaces
-    memberCount   Int      @default(0)
-    createdAt     DateTime @default(now())
-  }
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stride — Circles</title>
+<title>Circles — Stride</title>
 <link rel="stylesheet" href="/static/style.css">
 <link rel="icon" href="/static/brand-mark.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/static/supabase.js"></script>
+<style>
+  .circles-container { max-width:860px; margin:40px auto; padding:0 24px; }
+  .page-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:32px; }
+  .circle-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:20px 24px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; cursor:pointer; transition:border-color 0.15s; }
+  .circle-card:hover { border-color:var(--border-visible); }
+  .circle-info { flex:1; min-width:0; }
+  .circle-name { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:700; }
+  .circle-desc { font-size:13px; color:var(--text-muted); margin-top:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .circle-meta { font-size:12px; color:var(--text-dim); margin-top:6px; }
+  .circle-badge { display:inline-block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; padding:3px 10px; border-radius:20px; }
+  .badge-public { background:rgba(30,94,245,0.12); color:var(--cobalt); }
+  .badge-private { background:rgba(108,60,225,0.12); color:var(--violet); }
+  .view-btn { padding:8px 18px; font-size:12px; min-height:44px; flex-shrink:0; }
+  .empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); border:1px dashed var(--border-visible); border-radius:var(--radius); }
+  .section-title { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:700; margin-bottom:16px; color:var(--charcoal); }
+  .search-bar { display:flex; gap:8px; margin-bottom:20px; }
+  .search-bar input { flex:1; }
+  .loading { text-align:center; padding:60px 20px; color:var(--text-muted); }
+  .signin-prompt { text-align:center; padding:20px; border:1px dashed var(--border-visible); border-radius:var(--radius); margin-bottom:32px; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:999; display:flex; align-items:center; justify-content:center; }
+  .modal { background:#fff; border-radius:var(--radius); padding:28px; max-width:440px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.15); }
+  .modal h2 { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:700; margin-bottom:16px; }
+  .form-group { margin-bottom:16px; }
+  .form-group label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--charcoal); }
+  .form-group input, .form-group textarea { width:100%; }
+  .toggle-row { display:flex; align-items:center; gap:12px; }
+  .toggle-switch { position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0; }
+  .toggle-switch input { display:none; }
+  .toggle-slider { position:absolute; inset:0; background:var(--surface-3); border-radius:24px; cursor:pointer; transition:background 0.2s; }
+  .toggle-slider::before { content:''; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:transform 0.2s; }
+  .toggle-switch input:checked + .toggle-slider { background:var(--cobalt); }
+  .toggle-switch input:checked + .toggle-slider::before { transform:translateX(20px); }
+
+  .user-nav { display:flex; align-items:center; gap:12px; }
+  .user-nav-avatar { width:32px; height:32px; border-radius:50%; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--text-muted); }
+  .user-nav-name { font-size:13px; font-weight:600; color:var(--charcoal); }
+  .sign-out-btn { font-size:12px; color:var(--text-muted); cursor:pointer; background:none; border:none; font-family:inherit; padding:0; }
+  .sign-out-btn:hover { color:var(--magenta); }
+</style>
 </head>
 <body>
 
 <header class="site-header">
   <div class="inner">
     <a href="/" class="site-logo">Stride</a>
-    <nav class="site-nav">
+    <nav class="site-nav" id="main-nav">
       <a href="/races" class="nav-link">Races</a>
       <a href="/resources" class="nav-link">Resources</a>
-      <a href="/community" class="nav-active">Community</a>
-      <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
+      <a href="/community" class="nav-link" style="font-weight:600;color:var(--cobalt);">Community</a>
+      <span id="nav-auth-area"></span>
     </nav>
   </div>
 </header>
 
 <main>
-
-<section class="section-charcoal py-16">
-  <div class="container">
-    <a href="/community" class="text-sm" style="color:var(--violet);text-decoration:underline;">← Back to community</a>
-    <h1 class="font-display mt-4" style="font-size:40px;font-weight:900;letter-spacing:-0.03em;line-height:1.1;">Circles</h1>
-    <p class="text-lg text-muted mt-2" style="max-width:600px;">Small, focused groups for specific races, interests, and geographies. Find your people.</p>
+  <div class="circles-container" id="circles-content">
+    <div class="loading">Loading circles...</div>
   </div>
-</section>
-
-<section class="section-surface2 section-border-top py-12">
-  <div class="container-narrow">
-
-    <!-- Training cohorts -->
-    <h2 class="font-display text-xl font-bold mb-4" style="color:var(--cobalt);">Training cohorts</h2>
-    <div class="flex flex-col gap-3 mb-10" id="cohorts">
-      <div class="circle-card" data-user="circle-chicago">
-        <div>
-          <span class="block text-sm font-semibold">Chicago Spring Half — Fall 2026</span>
-          <span class="block text-xs text-muted mt-1">Training together for the Chicago spring half. Week-by-week accountability, shared long runs, race-day meetup.</span>
-          <div id="mod-chicago"></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          <span class="circle-type type-gear" style="background:rgba(30,94,245,0.12);color:var(--cobalt);">Cohort</span>
-          <span class="text-xs text-muted">348 members</span>
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
-        </div>
-      </div>
-      <div class="circle-card" data-user="circle-boston">
-        <div>
-          <span class="block text-sm font-semibold">Boston 2027 qualifiers</span>
-          <span class="block text-xs text-muted mt-1">For runners targeting a BQ. Share training blocks, race selection strategy, and the qualifying attempt itself.</span>
-          <div id="mod-boston"></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          <span class="circle-type type-gear" style="background:rgba(30,94,245,0.12);color:var(--cobalt);">Cohort</span>
-          <span class="text-xs text-muted">512 members</span>
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Local groups -->
-    <h2 class="font-display text-xl font-bold mb-4" style="color:var(--violet);">Local groups</h2>
-    <div class="flex flex-col gap-3 mb-10" id="local-groups">
-      <div class="circle-card" data-user="circle-denver">
-        <div>
-          <span class="block text-sm font-semibold">Denver Trail Runners</span>
-          <span class="block text-xs text-muted mt-1">Weekly group runs on Front Range trails. All paces welcome — we regroup at the trailhead.</span>
-          <div id="mod-denver"></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          <span class="circle-type" style="background:rgba(108,60,225,0.12);color:var(--violet);">Local</span>
-          <span class="text-xs text-muted">1.2K members</span>
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
-        </div>
-      </div>
-      <div class="circle-card" data-user="circle-nyc">
-        <div>
-          <span class="block text-sm font-semibold">NYC morning crew</span>
-          <span class="block text-xs text-muted mt-1">Central Park loops at 6 AM, Tuesdays and Thursdays. Coffee after.</span>
-          <div id="mod-nyc"></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          <span class="circle-type" style="background:rgba(108,60,225,0.12);color:var(--violet);">Local</span>
-          <span class="text-xs text-muted">267 members</span>
-          <button class="btn btn-violet" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Interest groups -->
-    <h2 class="font-display text-xl font-bold mb-4" style="color:var(--lime-text);">Interest groups</h2>
-    <div class="flex flex-col gap-3 mb-10" id="interest-groups">
-      <div class="circle-card" data-user="circle-strength">
-        <div>
-          <span class="block text-sm font-semibold">Strength for runners</span>
-          <span class="block text-xs text-muted mt-1">Programming, accountability, and form checks for runners who lift. No bro science — evidence-based S&C for endurance athletes.</span>
-          <div id="mod-strength"></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          <span class="circle-type" style="background:rgba(200,255,0,0.12);color:var(--lime-text);">Interest</span>
-          <span class="text-xs text-muted">892 members</span>
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
-        </div>
-      </div>
-      <div class="circle-card" data-user="circle-c25k">
-        <div>
-          <span class="block text-sm font-semibold">Couch to 5K Crew</span>
-          <span class="block text-xs text-muted mt-1">Starting from zero? This is your crew. Celebrating every milestone, no matter how small.</span>
-          <div id="mod-c25k"></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          <span class="circle-type" style="background:rgba(200,255,0,0.12);color:var(--lime-text);">Interest</span>
-          <span class="text-xs text-muted">1.8K members</span>
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Invite-only -->
-    <h2 class="font-display text-xl font-bold mb-4" style="color:var(--magenta);">Invite-only circles</h2>
-    <div class="flex flex-col gap-3" id="invite-circles">
-      <div class="circle-card" data-user="circle-elite-marathon" style="border-color:rgba(108,60,225,0.3);background:var(--surface-2);">
-        <div>
-          <span class="block text-sm font-semibold">Elite marathon build — Spring 2027</span>
-          <span class="block text-xs text-muted mt-1">Sub-2:30 marathoners sharing build data, workouts, and race strategy. Coach-led with periodic AMAs.</span>
-          <div id="mod-elite"></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          <span class="circle-type" style="background:rgba(108,60,225,0.15);color:var(--violet);">Invite-only</span>
-          <span class="text-xs text-muted">64 members</span>
-          <form onsubmit="event.preventDefault();var c=this.querySelector('input').value;if(c)alert('Code submitted: '+c);" style="display:flex;gap:6px;align-items:center;">
-            <input type="text" placeholder="Code" style="width:80px;padding:8px;font-size:12px;">
-            <button type="submit" class="btn btn-violet" style="padding:8px 12px;font-size:12px;min-height:44px;">Enter</button>
-          </form>
-        </div>
-      </div>
-      <div class="circle-card" data-user="circle-coaches" style="border-color:rgba(108,60,225,0.3);background:var(--surface-2);">
-        <div>
-          <span class="block text-sm font-semibold">Coaches' corner</span>
-          <span class="block text-xs text-muted mt-1">A space for running coaches to share methodology, case studies, and mentorship. Credentialed coaches only.</span>
-          <div id="mod-coaches"></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          <span class="circle-type" style="background:rgba(108,60,225,0.15);color:var(--violet);">Invite-only</span>
-          <span class="text-xs text-muted">128 members</span>
-          <form onsubmit="event.preventDefault();var c=this.querySelector('input').value;if(c)alert('Code submitted: '+c);" style="display:flex;gap:6px;align-items:center;">
-            <input type="text" placeholder="Code" style="width:80px;padding:8px;font-size:12px;">
-            <button type="submit" class="btn btn-violet" style="padding:8px 12px;font-size:12px;min-height:44px;">Enter</button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty state: shown when no circles exist (future-proofing) -->
-    <div class="empty-state" id="circles-empty" style="display:none;">
-      <p class="text-muted">This circle is waiting for its first members.</p>
-      <a href="/onboarding/first-timer" class="btn btn-primary mt-4" style="font-size:13px;">Map your roadmap</a>
-    </div>
-
-  </div>
-</section>
-
 </main>
 
 <footer class="site-footer">
@@ -191,25 +75,283 @@
     <a href="/data-deletion" class="nav-link">Data deletion</a><a href="/health-disclosure" class="nav-link">Health disclosure</a><a href="/accessibility" class="nav-link">Accessibility</a></div>
 </footer>
 
-<script src="/static/moderation.js"></script>
 <script>
 (function() {
-  var modTargets = [
-    { id: "mod-chicago", name: "Chicago Spring Half" },
-    { id: "mod-boston", name: "Boston 2027 qualifiers" },
-    { id: "mod-denver", name: "Denver Trail Runners" },
-    { id: "mod-nyc", name: "NYC morning crew" },
-    { id: "mod-strength", name: "Strength for runners" },
-    { id: "mod-c25k", name: "Couch to 5K Crew" },
-    { id: "mod-elite", name: "Elite marathon build" },
-    { id: "mod-coaches", name: "Coaches' corner" },
-  ];
-  try {
-    modTargets.forEach(function(t) {
-      var el = document.getElementById(t.id);
-      if (el) { el.appendChild(moderationActions(t.name)); }
+  var container = document.getElementById('circles-content');
+  var navAuth = document.getElementById('nav-auth-area');
+  var currentUser = null;
+  var myCircles = [];
+  var discoverCircles = [];
+
+  function getInitials(name) {
+    if (!name) return '?';
+    return name.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().substring(0, 2);
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    var d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  }
+
+  function escHtml(s) {
+    if (!s) return '';
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function renderNavAuth(user) {
+    if (user) {
+      var dn = (user.user_metadata && user.user_metadata.display_name) || user.email || 'Runner';
+      navAuth.innerHTML =
+        '<div class="user-nav">' +
+          '<div class="user-nav-avatar">' + getInitials(dn) + '</div>' +
+          '<a href="/profile" class="user-nav-name">' + escHtml(dn) + '</a>' +
+          '<a href="/boards" class="user-nav-name" style="font-weight:700;">My boards</a>' +
+          '<button class="sign-out-btn" onclick="StrideAuth.signOut(function(){window.location.reload();})">Sign out</button>' +
+        '</div>';
+    } else {
+      navAuth.innerHTML = '<a href="/auth/signin" class="nav-link" style="font-weight:600;color:var(--cobalt);">Sign in</a>';
+    }
+  }
+
+  function getSession(cb) {
+    StrideAuth.getSession(function(err, session) {
+      cb(err, session);
     });
-  } catch(e) {}
+  }
+
+  function renderCircleCard(c) {
+    return '<div class="circle-card" onclick="window.location.href=\'/community/circles/' + c.id + '\'">' +
+      '<div class="circle-info">' +
+        '<div class="circle-name">' + escHtml(c.name) + '</div>' +
+        (c.description ? '<div class="circle-desc">' + escHtml(c.description) + '</div>' : '') +
+        '<div class="circle-meta">' +
+          '<span class="circle-badge ' + (c.is_public ? 'badge-public' : 'badge-private') + '">' + (c.is_public ? 'Public' : 'Private') + '</span> ' +
+          (c.member_count || 1) + ' member' + ((c.member_count || 1) !== 1 ? 's' : '') + ' · Created ' + formatDate(c.created_at) +
+        '</div>' +
+      '</div>' +
+      '<button class="btn btn-primary view-btn">View</button>' +
+    '</div>';
+  }
+
+  function renderMain() {
+    StrideAuth.getCurrentUser(function(err, user) {
+      if (err || !user) {
+        currentUser = null;
+        renderNavAuth(null);
+        renderUnauthenticated();
+        return;
+      }
+
+      currentUser = user;
+      renderNavAuth(user);
+      renderAuthenticated();
+    });
+  }
+
+  function renderUnauthenticated() {
+    var html = '';
+
+    html += '<div class="page-header">';
+    html += '<div><a href="/community" class="text-sm" style="color:var(--violet);text-decoration:underline;">← Back to community</a>';
+    html += '<h1 class="font-display mt-2" style="font-size:40px;font-weight:900;letter-spacing:-0.03em;line-height:1.1;">Circles</h1>';
+    html += '<p class="text-lg text-muted mt-2" style="max-width:600px;">Small, focused groups for specific races, interests, and geographies.</p></div>';
+    html += '</div>';
+
+    html += '<div class="signin-prompt">';
+    html += '<p class="text-muted">Sign in to create circles and join communities.</p>';
+    html += '<a href="/auth/signin" class="btn btn-primary" style="margin-top:12px;">Sign in</a>';
+    html += '<p style="margin-top:8px;font-size:13px;color:var(--text-dim);">New to Stride? <a href="/auth/signup" style="color:var(--cobalt);text-decoration:underline;">Create an account</a></p>';
+    html += '</div>';
+
+    html += '<h2 class="section-title" style="color:var(--cobalt);">Discover circles</h2>';
+    html += '<div class="search-bar">';
+    html += '<input type="text" id="discover-search" placeholder="Search circles..." style="padding:10px 14px;">';
+    html += '<button class="btn btn-secondary" id="search-btn" style="padding:10px 20px;">Search</button>';
+    html += '</div>';
+    html += '<div id="discover-list"><div class="loading">Loading discoverable circles...</div></div>';
+
+    container.innerHTML = html;
+
+    loadDiscover();
+
+    document.getElementById('search-btn').addEventListener('click', function() {
+      loadDiscover(document.getElementById('discover-search').value);
+    });
+    document.getElementById('discover-search').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') loadDiscover(e.target.value);
+    });
+  }
+
+  function renderAuthenticated() {
+    var html = '';
+
+    html += '<div class="page-header">';
+    html += '<div><a href="/community" class="text-sm" style="color:var(--violet);text-decoration:underline;">← Back to community</a>';
+    html += '<h1 class="font-display mt-2" style="font-size:40px;font-weight:900;letter-spacing:-0.03em;line-height:1.1;">Circles</h1>';
+    html += '<p class="text-lg text-muted mt-2" style="max-width:600px;">Small, focused groups for specific races, interests, and geographies. Find your people.</p></div>';
+    html += '<button class="btn btn-primary" id="create-circle-btn" style="padding:10px 20px;font-size:13px;">+ Create circle</button>';
+    html += '</div>';
+
+    // My Circles section
+    html += '<h2 class="section-title" style="color:var(--cobalt);">My circles</h2>';
+    html += '<div id="my-circles-list"><div class="loading">Loading your circles...</div></div>';
+
+    // Discover section
+    html += '<h2 class="section-title mt-10" style="color:var(--violet);">Discover circles</h2>';
+    html += '<div class="search-bar">';
+    html += '<input type="text" id="discover-search" placeholder="Search circles..." style="padding:10px 14px;">';
+    html += '<button class="btn btn-secondary" id="search-btn" style="padding:10px 20px;">Search</button>';
+    html += '</div>';
+    html += '<div id="discover-list"><div class="loading">Loading discoverable circles...</div></div>';
+
+    container.innerHTML = html;
+
+    // Hook up create button
+    document.getElementById('create-circle-btn').addEventListener('click', showCreateModal);
+
+    // Hook up search
+    document.getElementById('search-btn').addEventListener('click', function() {
+      loadDiscover(document.getElementById('discover-search').value);
+    });
+    document.getElementById('discover-search').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') loadDiscover(e.target.value);
+    });
+
+    // Load data
+    loadMyCircles();
+    loadDiscover();
+  }
+
+  function loadMyCircles() {
+    getSession(function(err, session) {
+      if (err || !session) {
+        document.getElementById('my-circles-list').innerHTML = '<div class="empty-state" style="padding:30px;"><p>Sign in to see your circles.</p></div>';
+        return;
+      }
+      fetch('/api/circles', {
+        headers: { 'Authorization': 'Bearer ' + session.access_token }
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          myCircles = data.circles || [];
+          var el = document.getElementById('my-circles-list');
+          if (!el) return;
+          if (myCircles.length === 0) {
+            el.innerHTML = '<div class="empty-state" style="padding:30px;"><p>You haven\'t joined any circles yet.</p><p style="margin-top:8px;">Browse the discover section below or create your own.</p></div>';
+          } else {
+            el.innerHTML = myCircles.map(renderCircleCard).join('');
+          }
+        })
+        .catch(function() {
+          var el = document.getElementById('my-circles-list');
+          if (el) el.innerHTML = '<div class="empty-state" style="padding:30px;"><p>Could not load your circles.</p></div>';
+        });
+    });
+  }
+
+  function loadDiscover(search) {
+    var url = '/api/circles/discover';
+    if (search && search.trim()) {
+      url += '?search=' + encodeURIComponent(search.trim());
+    }
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        discoverCircles = data.circles || [];
+        var el = document.getElementById('discover-list');
+        if (!el) return;
+        if (discoverCircles.length === 0) {
+          el.innerHTML = '<div class="empty-state" style="padding:30px;"><p>No circles found.</p>' + (search ? '<p style="margin-top:8px;">Try a different search term.</p>' : '<p style="margin-top:8px;">Be the first to create one.</p>') + '</div>';
+        } else {
+          el.innerHTML = discoverCircles.map(renderCircleCard).join('');
+        }
+      })
+      .catch(function() {
+        var el = document.getElementById('discover-list');
+        if (el) el.innerHTML = '<div class="empty-state" style="padding:30px;"><p>Could not load circles.</p></div>';
+      });
+  }
+
+  function showCreateModal() {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML =
+      '<div class="modal">' +
+        '<h2>Create a circle</h2>' +
+        '<div class="form-group">' +
+          '<label for="circle-name">Circle name</label>' +
+          '<input type="text" id="circle-name" placeholder="e.g. Chicago marathon crew" maxlength="100">' +
+        '</div>' +
+        '<div class="form-group">' +
+          '<label for="circle-desc">Description (optional)</label>' +
+          '<textarea id="circle-desc" rows="3" placeholder="What is this circle about?" maxlength="300"></textarea>' +
+        '</div>' +
+        '<div class="form-group" style="display:flex;align-items:center;gap:12px;">' +
+          '<label class="toggle-switch">' +
+            '<input type="checkbox" id="circle-public" checked>' +
+            '<span class="toggle-slider"></span>' +
+          '</label>' +
+          '<label for="circle-public" style="margin-bottom:0;cursor:pointer;">Make this circle public</label>' +
+        '</div>' +
+        '<div class="form-group" id="join-code-group" style="display:none;">' +
+          '<label for="circle-join-code">Join code (optional — auto-generated if left empty)</label>' +
+          '<input type="text" id="circle-join-code" placeholder="e.g. CHIMARA26" maxlength="20" style="font-family:monospace;text-transform:uppercase;">' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">' +
+          '<button class="btn btn-secondary" id="modal-cancel" style="font-size:13px;">Cancel</button>' +
+          '<button class="btn btn-primary" id="modal-create" style="font-size:13px;">Create circle</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    // Toggle join code visibility
+    var publicToggle = document.getElementById('circle-public');
+    var joinCodeGroup = document.getElementById('join-code-group');
+    publicToggle.addEventListener('change', function() {
+      joinCodeGroup.style.display = publicToggle.checked ? 'none' : 'block';
+    });
+
+    document.getElementById('modal-cancel').addEventListener('click', function() { overlay.remove(); });
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+
+    document.getElementById('modal-create').addEventListener('click', function() {
+      var name = document.getElementById('circle-name').value.trim();
+      var desc = document.getElementById('circle-desc').value.trim();
+      var isPublic = document.getElementById('circle-public').checked;
+      var joinCode = document.getElementById('circle-join-code').value.trim() || null;
+
+      if (!name) {
+        document.getElementById('circle-name').style.borderColor = 'var(--magenta)';
+        return;
+      }
+
+      getSession(function(err, session) {
+        if (err || !session) { alert('Please sign in again.'); return; }
+        var body = { name: name, description: desc, is_public: isPublic };
+        if (!isPublic && joinCode) body.join_code = joinCode;
+        fetch('/api/circles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + session.access_token
+          },
+          body: JSON.stringify(body)
+        })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.error) { alert(data.error); return; }
+            overlay.remove();
+            // Redirect to the new circle
+            window.location.href = '/community/circles/' + data.circle.id;
+          })
+          .catch(function() { alert('Failed to create circle.'); });
+      });
+    });
+  }
+
+  renderMain();
 })();
 </script>
 
@@ -224,17 +366,6 @@
     localStorage.setItem('cookieConsent', 'true');
     document.getElementById('cookie-banner').remove();
   });
-})();
-</script>
-
-<script>
-// Show empty state only when all circle sections are empty
-(function() {
-  var sections = document.querySelectorAll('#cohorts .circle-card, #local-groups .circle-card, #interest-groups .circle-card, #invite-circles .circle-card');
-  var empty = document.getElementById('circles-empty');
-  if (empty && sections.length === 0) {
-    empty.style.display = '';
-  }
 })();
 </script>
 

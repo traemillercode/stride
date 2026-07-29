@@ -481,6 +481,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathname.match(/^\/community\/circles\/[^\/]+$/)) {
+    servePage(res, "circle-detail.html");
+    return;
+  }
+
   if (pathname.startsWith("/community/pace/")) {
     servePage(res, "community-pace.html");
     return;
@@ -833,6 +838,354 @@ const server = http.createServer((req, res) => {
         .then(function(dr) {
           if (dr.error) { db.json(res, 500, { error: dr.error.message }); return; }
           db.json(res, 200, { status: "deleted" });
+        }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    return;
+  }
+
+  // ── Circles: Discovery (public, no auth required) ──
+  // GET /api/circles/discover
+  if (pathname === "/api/circles/discover" && req.method === "GET") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var supabase = db.getClient();
+    var searchQuery = url.searchParams.get("search") || "";
+    var query = supabase.from("circles").select("*").eq("is_public", true);
+    if (searchQuery.trim()) {
+      query = query.ilike("name", "%" + searchQuery.trim() + "%");
+    }
+    query.order("member_count", { ascending: false })
+      .then(function(cr) {
+        if (cr.error) { db.json(res, 500, { error: cr.error.message }); return; }
+        db.json(res, 200, { circles: cr.data || [] });
+      }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    return;
+  }
+
+  // ── Circles: List user's circles ──
+  // GET /api/circles
+  if (pathname === "/api/circles" && req.method === "GET") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      db.json(res, 401, { error: "Authentication required" });
+      return;
+    }
+    var token = authHeader.split(" ")[1];
+    var supabase = db.getClient();
+    supabase.auth.getUser(token).then(function(r) {
+      if (r.error || !r.data.user) { db.json(res, 401, { error: "Invalid token" }); return; }
+      var userId = r.data.user.id;
+      // Find circles where user is a member
+      supabase.from("circle_members").select("circle_id").eq("user_id", userId)
+        .then(function(mr) {
+          if (mr.error) { db.json(res, 500, { error: mr.error.message }); return; }
+          var circleIds = (mr.data || []).map(function(m) { return m.circle_id; });
+          if (circleIds.length === 0) { db.json(res, 200, { circles: [] }); return; }
+          supabase.from("circles").select("*").in("id", circleIds).order("created_at", { ascending: false })
+            .then(function(cr) {
+              if (cr.error) { db.json(res, 500, { error: cr.error.message }); return; }
+              db.json(res, 200, { circles: cr.data || [] });
+            }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+        }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    return;
+  }
+
+  // ── Circles: Create a circle ──
+  // POST /api/circles
+  if (pathname === "/api/circles" && req.method === "POST") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      db.json(res, 401, { error: "Authentication required" });
+      return;
+    }
+    var token = authHeader.split(" ")[1];
+    var supabase = db.getClient();
+    supabase.auth.getUser(token).then(function(r) {
+      if (r.error || !r.data.user) { db.json(res, 401, { error: "Invalid token" }); return; }
+      var userId = r.data.user.id;
+      db.parseBody(req).then(function(body) {
+        var name = body.name;
+        var description = body.description || "";
+        var isPublic = body.is_public !== false;
+        var joinCode = body.join_code || null;
+        if (!name || !name.trim()) { db.json(res, 400, { error: "Circle name is required." }); return; }
+        // Auto-generate join code for private circles if none provided
+        if (!isPublic && !joinCode) {
+          joinCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+        }
+        supabase.from("circles").insert({
+          creator_id: userId, name: name.trim(), description: description,
+          is_public: isPublic, join_code: joinCode, member_count: 1
+        }).select().single().then(function(cr) {
+          if (cr.error) { db.json(res, 500, { error: cr.error.message }); return; }
+          var circle = cr.data;
+          // Auto-add creator as owner member
+          supabase.from("circle_members").insert({
+            circle_id: circle.id, user_id: userId, role: "owner"
+          }).then(function() {
+            db.json(res, 201, { circle: circle });
+          }).catch(function() {
+            db.json(res, 201, { circle: circle });
+          });
+        }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+      }).catch(function() { db.json(res, 400, { error: "Invalid JSON body" }); });
+    }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    return;
+  }
+
+  // ── Circles: Get circle detail ──
+  // GET /api/circles/:id
+  if (pathname.match(/^\/api\/circles\/[^\/]+$/) && req.method === "GET") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var circleId = pathname.split("/")[3];
+    var supabase = db.getClient();
+    var authHeader = req.headers.authorization;
+    var token = (authHeader && authHeader.startsWith("Bearer ")) ? authHeader.split(" ")[1] : null;
+
+    var fetchCircle = function(userId) {
+      supabase.from("circles").select("*").eq("id", circleId).single()
+        .then(function(cr) {
+          if (cr.error || !cr.data) { db.json(res, 404, { error: "Circle not found." }); return; }
+          var circle = cr.data;
+          // Check access for private circles
+          if (!circle.is_public && !userId) {
+            db.json(res, 403, { error: "This circle is private. Sign in to check access." });
+            return;
+          }
+          // If private and user is not null, verify membership (we'll still return the circle but check membership later)
+          // Get members
+          Promise.all([
+            supabase.from("circle_members").select("user_id,role,joined_at").eq("circle_id", circleId).order("joined_at", { ascending: true }),
+            // Get recent activities from members (limit 20)
+            supabase.from("circle_members").select("user_id").eq("circle_id", circleId)
+              .then(function(mr) {
+                var memberIds = (mr.data || []).map(function(m) { return m.user_id; });
+                if (memberIds.length === 0) return Promise.resolve({ data: [] });
+                return supabase.from("activities").select("*").in("user_id", memberIds).order("posted_at", { ascending: false }).limit(20);
+              })
+          ]).then(function(results) {
+            var membersResult = results[0];
+            var activitiesResult = results[1];
+            var members = membersResult.data || [];
+            var activities = activitiesResult.data || [];
+
+            // Enrich members with user display_name
+            var memberUserIds = members.map(function(m) { return m.user_id; });
+            var enrichMembers = Promise.resolve(members);
+            if (memberUserIds.length > 0) {
+              enrichMembers = supabase.from("users").select("id,display_name").in("id", memberUserIds)
+                .then(function(ur) {
+                  var userMap = {};
+                  (ur.data || []).forEach(function(u) { userMap[u.id] = u.display_name || "Runner"; });
+                  return members.map(function(m) {
+                    return { user_id: m.user_id, role: m.role, joined_at: m.joined_at, display_name: userMap[m.user_id] || "Runner" };
+                  });
+                });
+            }
+
+            enrichMembers.then(function(enrichedMembers) {
+              // For private circles, verify user is a member
+              if (!circle.is_public && userId) {
+                var isMember = enrichedMembers.some(function(m) { return m.user_id === userId; });
+                if (!isMember) {
+                  db.json(res, 403, { error: "You are not a member of this private circle." });
+                  return;
+                }
+              }
+
+              db.json(res, 200, {
+                circle: circle,
+                members: enrichedMembers,
+                activities: activities,
+                is_member: userId ? enrichedMembers.some(function(m) { return m.user_id === userId; }) : false,
+                is_owner: userId ? enrichedMembers.some(function(m) { return m.user_id === userId && m.role === "owner"; }) : false
+              });
+            }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+          }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+        }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    };
+
+    if (token) {
+      supabase.auth.getUser(token).then(function(r) {
+        fetchCircle(r.data && r.data.user ? r.data.user.id : null);
+      }).catch(function() { fetchCircle(null); });
+    } else {
+      fetchCircle(null);
+    }
+    return;
+  }
+
+  // ── Circles: Join a circle ──
+  // POST /api/circles/:id/join
+  if (pathname.match(/^\/api\/circles\/[^\/]+\/join$/) && req.method === "POST") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      db.json(res, 401, { error: "Authentication required" });
+      return;
+    }
+    var token = authHeader.split(" ")[1];
+    var circleId = pathname.split("/")[3];
+    var supabase = db.getClient();
+    supabase.auth.getUser(token).then(function(r) {
+      if (r.error || !r.data.user) { db.json(res, 401, { error: "Invalid token" }); return; }
+      var userId = r.data.user.id;
+      // Get the circle
+      supabase.from("circles").select("*").eq("id", circleId).single()
+        .then(function(cr) {
+          if (cr.error || !cr.data) { db.json(res, 404, { error: "Circle not found." }); return; }
+          var circle = cr.data;
+          // Check join code for private circles
+          if (!circle.is_public) {
+            db.parseBody(req).then(function(body) {
+              var providedCode = body.join_code || "";
+              if (!providedCode || providedCode !== circle.join_code) {
+                db.json(res, 403, { error: "Invalid join code. This circle requires a valid join code." });
+                return;
+              }
+              doJoin(userId, circle);
+            }).catch(function() { db.json(res, 400, { error: "Invalid JSON body. Provide join_code for private circles." }); });
+            return;
+          }
+          doJoin(userId, circle);
+        }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+
+      function doJoin(userId, circle) {
+        // Check if already a member
+        supabase.from("circle_members").select("id").eq("circle_id", circle.id).eq("user_id", userId).single()
+          .then(function(mr) {
+            if (mr.data) {
+              db.json(res, 409, { error: "You are already a member of this circle." });
+              return;
+            }
+            // Add member
+            supabase.from("circle_members").insert({
+              circle_id: circle.id, user_id: userId, role: "member"
+            }).then(function() {
+              // Increment member_count
+              supabase.from("circles").update({ member_count: (circle.member_count || 0) + 1 }).eq("id", circle.id)
+                .then(function() {
+                  db.json(res, 200, { status: "joined", circle_id: circle.id });
+                }).catch(function() {
+                  db.json(res, 200, { status: "joined", circle_id: circle.id });
+                });
+            }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+          }).catch(function() {
+            // Error from .single() on empty result — means not a member, proceed
+            supabase.from("circle_members").insert({
+              circle_id: circle.id, user_id: userId, role: "member"
+            }).then(function() {
+              supabase.from("circles").update({ member_count: (circle.member_count || 0) + 1 }).eq("id", circle.id)
+                .then(function() {
+                  db.json(res, 200, { status: "joined", circle_id: circle.id });
+                }).catch(function() {
+                  db.json(res, 200, { status: "joined", circle_id: circle.id });
+                });
+            }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+          });
+      }
+    }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    return;
+  }
+
+  // ── Circles: Leave a circle ──
+  // POST /api/circles/:id/leave
+  if (pathname.match(/^\/api\/circles\/[^\/]+\/leave$/) && req.method === "POST") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      db.json(res, 401, { error: "Authentication required" });
+      return;
+    }
+    var token = authHeader.split(" ")[1];
+    var circleId = pathname.split("/")[3];
+    var supabase = db.getClient();
+    supabase.auth.getUser(token).then(function(r) {
+      if (r.error || !r.data.user) { db.json(res, 401, { error: "Invalid token" }); return; }
+      var userId = r.data.user.id;
+      // Check membership and role
+      supabase.from("circle_members").select("id,role").eq("circle_id", circleId).eq("user_id", userId).single()
+        .then(function(mr) {
+          if (!mr.data) { db.json(res, 404, { error: "You are not a member of this circle." }); return; }
+          if (mr.data.role === "owner") {
+            db.json(res, 400, { error: "Circle owners cannot leave. Delete the circle or transfer ownership first." });
+            return;
+          }
+          // Remove membership
+          supabase.from("circle_members").delete().eq("id", mr.data.id)
+            .then(function() {
+              // Decrement member_count
+              supabase.from("circles").select("member_count").eq("id", circleId).single()
+                .then(function(cr) {
+                  var newCount = Math.max(0, ((cr.data && cr.data.member_count) || 1) - 1);
+                  supabase.from("circles").update({ member_count: newCount }).eq("id", circleId)
+                    .then(function() {
+                      db.json(res, 200, { status: "left", circle_id: circleId });
+                    }).catch(function() {
+                      db.json(res, 200, { status: "left", circle_id: circleId });
+                    });
+                }).catch(function() {
+                  db.json(res, 200, { status: "left", circle_id: circleId });
+                });
+            }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+        }).catch(function() {
+          // Not a member (single returned null)
+          db.json(res, 404, { error: "You are not a member of this circle." });
+        });
+    }).catch(function(err) { db.json(res, 500, { error: err.message }); });
+    return;
+  }
+
+  // ── Circles: Delete a circle ──
+  // DELETE /api/circles/:id
+  if (pathname.match(/^\/api\/circles\/[^\/]+$/) && req.method === "DELETE") {
+    if (!db) {
+      db.json(res, 500, { error: "Database not available" });
+      return;
+    }
+    var authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      db.json(res, 401, { error: "Authentication required" });
+      return;
+    }
+    var token = authHeader.split(" ")[1];
+    var circleId = pathname.split("/")[3];
+    var supabase = db.getClient();
+    supabase.auth.getUser(token).then(function(r) {
+      if (r.error || !r.data.user) { db.json(res, 401, { error: "Invalid token" }); return; }
+      var userId = r.data.user.id;
+      // Only allow deleting if user is the creator/owner
+      supabase.from("circles").select("creator_id").eq("id", circleId).single()
+        .then(function(cr) {
+          if (cr.error || !cr.data) { db.json(res, 404, { error: "Circle not found." }); return; }
+          if (cr.data.creator_id !== userId) {
+            db.json(res, 403, { error: "Only the circle owner can delete it." });
+            return;
+          }
+          supabase.from("circles").delete().eq("id", circleId)
+            .then(function() {
+              db.json(res, 200, { status: "deleted" });
+            }).catch(function(err) { db.json(res, 500, { error: err.message }); });
         }).catch(function(err) { db.json(res, 500, { error: err.message }); });
     }).catch(function(err) { db.json(res, 500, { error: err.message }); });
     return;
