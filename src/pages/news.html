@@ -52,49 +52,6 @@
 
 <script>
 (function() {
-  var ARTICLES = [
-    {
-      title: "Faith Kipyegon breaks her own 1500m world record at Paris Diamond League",
-      date: "2026-07-18",
-      source: "World Athletics",
-      sourceUrl: "https://worldathletics.org/news/report/faith-kipyegon-world-record-1500m-paris-diamond-league-2026",
-      summary: "Faith Kipyegon lowered her own women's 1500m world record to 3:48.45 at the Paris Diamond League, becoming the first woman to break 3:49. The three-time Olympic champion now holds the 1500m, mile, and 5000m world records simultaneously — a feat unmatched in the modern era of track and field.",
-      category: "track"
-    },
-    {
-      title: "Boston Marathon 2026: Evans Chebet three-peats on a perfect racing day",
-      date: "2026-04-20",
-      source: "Runner's World",
-      sourceUrl: "https://www.runnersworld.com/races-places/a62500000/boston-marathon-2026-results/",
-      summary: "Evans Chebet became the first man since Robert Kipkoech Cheruiyot to win three consecutive Boston Marathons, crossing the line in 2:05:42 under ideal conditions. Hellen Obiri defended her 2024 title on the women's side with a decisive move on Heartbreak Hill, finishing in 2:20:11.",
-      category: "road"
-    },
-    {
-      title: "UTMB 2026 preview: Jim Walmsley returns to defend amid the deepest field ever",
-      date: "2026-08-22",
-      source: "iRunFar",
-      sourceUrl: "https://www.irunfar.com/utmb-2026-preview",
-      summary: "Jim Walmsley enters UTMB 2026 chasing a third straight victory at the 106-mile Alpine ultra, but faces the deepest men's field in race history. Katie Schide returns to defend her women's title after smashing the course record in 2025, while a wave of young European talent looks to disrupt the American dominance of recent years.",
-      category: "trail"
-    },
-    {
-      title: "Nike Alphafly 4 launches with redesigned Air Zoom unit and wider forefoot",
-      date: "2026-06-10",
-      source: "Runner's World",
-      sourceUrl: "https://www.runnersworld.com/gear/a61850000/nike-alphafly-4-review/",
-      summary: "Nike released the Alphafly 4 with a completely redesigned Air Zoom unit that sits lower in the forefoot and a wider platform. Early testers report improved cornering stability and a more natural toe-off compared to the Alphafly 3, while retaining the signature energy return that made the line a marathon-day staple.",
-      category: "gear"
-    },
-    {
-      title: "Jacob Kiplimo shatters half marathon world record in Barcelona",
-      date: "2026-02-16",
-      source: "World Athletics",
-      sourceUrl: "https://worldathletics.org/news/report/jacob-kiplimo-half-marathon-world-record-barcelona-2026",
-      summary: "Jacob Kiplimo became the first man to break 57 minutes for the half marathon, clocking 56:42 at the Barcelona Half Marathon. The Ugandan's aggressive pacing from the gun saw him pass 10K in 26:45 before closing with a 13:38 final 5K split — an effort track historians are calling one of the greatest distance performances ever.",
-      category: "records"
-    }
-  ];
-
   var CATEGORY_COLORS = {
     track: { bg: "rgba(108,60,225,0.12)", color: "var(--violet)", dot: "var(--violet)" },
     road: { bg: "rgba(30,94,245,0.12)", color: "var(--cobalt)", dot: "var(--cobalt)" },
@@ -103,17 +60,17 @@
     records: { bg: "rgba(108,60,225,0.12)", color: "var(--violet)", dot: "var(--violet)" }
   };
 
-  // ── Extract unique categories ──
-  var categories = [];
-  var seenCats = {};
-  ARTICLES.forEach(function(a) {
-    if (!seenCats[a.category]) { seenCats[a.category] = true; categories.push(a.category); }
-  });
-
+  var ALL_ARTICLES = [];
   var activeCatFilter = null;
 
   function capitalize(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function decodeEntities(text) {
+    var el = document.createElement("textarea");
+    el.innerHTML = text;
+    return el.value;
   }
 
   function chipStyle(active) {
@@ -123,7 +80,7 @@
     return "background:transparent;color:var(--text-muted);border:1px solid var(--border-visible);padding:5px 14px;border-radius:20px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;";
   }
 
-  function buildFilterChips() {
+  function buildFilterChips(categories) {
     var html = '<button class="filter-chip filter-all" data-value="all" style="' + chipStyle(activeCatFilter === null) + '">All</button>';
     categories.forEach(function(c) {
       html += '<button class="filter-chip filter-cat" data-value="' + c + '" style="' + chipStyle(activeCatFilter === c) + '">' + capitalize(c) + '</button>';
@@ -139,33 +96,30 @@
     var html = '';
     html += '<div class="card-dark" style="border-left:3px solid ' + catColor.dot + ';display:flex;flex-direction:column;padding:24px;">';
 
-    // Category badge
     html += '<span class="type-badge" style="background:' + catColor.bg + ';color:' + catColor.color + ';">' + capitalize(a.category) + '</span>';
 
-    // Title
-    html += '<h2 class="font-display text-lg font-bold leading-snug" style="margin-top:8px;">' + a.title + '</h2>';
+    html += '<h2 class="font-display text-lg font-bold leading-snug" style="margin-top:8px;">' + decodeEntities(a.title) + '</h2>';
 
-    // Date + source
     html += '<div class="flex items-center gap-2 text-xs text-dim mt-2">';
     html += '<span>' + dateStr + '</span>';
     html += '<span aria-hidden="true">·</span>';
-    html += '<span>via <a href="' + a.sourceUrl + '" target="_blank" rel="noopener" style="color:' + catColor.color + ';text-decoration:underline;text-underline-offset:2px;">' + a.source + '</a></span>';
+    html += '<span>via <a href="' + a.link + '" target="_blank" rel="noopener" style="color:' + catColor.color + ';text-decoration:underline;text-underline-offset:2px;">' + a.source + '</a></span>';
     html += '</div>';
 
-    // Summary
-    html += '<p class="mt-3 text-sm text-muted leading-relaxed" style="flex:1;">' + a.summary + '</p>';
+    if (a.summary) {
+      html += '<p class="mt-3 text-sm text-muted leading-relaxed" style="flex:1;">' + decodeEntities(a.summary) + '</p>';
+    }
 
-    // Read more link
-    html += '<a href="' + a.sourceUrl + '" target="_blank" rel="noopener" class="inline-block mt-3 text-sm font-semibold" style="color:' + catColor.color + ';text-decoration:underline;text-underline-offset:2px;">Read more →</a>';
+    html += '<a href="' + a.link + '" target="_blank" rel="noopener" class="inline-block mt-3 text-sm font-semibold" style="color:' + catColor.color + ';text-decoration:underline;text-underline-offset:2px;">Read more →</a>';
 
     html += '</div>';
     return html;
   }
 
   function filterAndRender() {
-    var filtered = ARTICLES;
+    var filtered = ALL_ARTICLES;
     if (activeCatFilter !== null) {
-      filtered = ARTICLES.filter(function(a) { return a.category === activeCatFilter; });
+      filtered = ALL_ARTICLES.filter(function(a) { return a.category === activeCatFilter; });
     }
 
     var grid = document.getElementById("news-grid");
@@ -193,13 +147,48 @@
     } else {
       activeCatFilter = val;
     }
-    buildFilterChips();
+    // Rebuild chips with updated active state
+    var cats = [];
+    var seen = {};
+    ALL_ARTICLES.forEach(function(a) {
+      if (!seen[a.category]) { seen[a.category] = true; cats.push(a.category); }
+    });
+    buildFilterChips(cats);
     filterAndRender();
   });
 
-  // ── Init ──
-  buildFilterChips();
-  filterAndRender();
+  // ── Init: fetch from API, fall back to hardcoded ──
+  fetch("/api/news")
+    .then(function(res) { return res.json(); })
+    .then(function(articles) {
+      if (articles && articles.length) {
+        ALL_ARTICLES = articles;
+      } else {
+        // Fallback to hardcoded articles
+        ALL_ARTICLES = [
+{ title:"Faith Kipyegon breaks her own 1500m world record at Paris Diamond League", date:"2026-07-18", source:"World Athletics", link:"https://worldathletics.org/news/report/faith-kipyegon-world-record-1500m-paris-diamond-league-2026", summary:"Faith Kipyegon lowered her own women's 1500m world record to 3:48.45 at the Paris Diamond League, becoming the first woman to break 3:49.", category:"track" },
+{ title:"Boston Marathon 2026: Evans Chebet three-peats on a perfect racing day", date:"2026-04-20", source:"Runner's World", link:"https://www.runnersworld.com/races-places/a62500000/boston-marathon-2026-results/", summary:"Evans Chebet became the first man since Robert Kipkoech Cheruiyot to win three consecutive Boston Marathons, crossing the line in 2:05:42.", category:"road" },
+{ title:"UTMB 2026 preview: Jim Walmsley returns to defend amid the deepest field ever", date:"2026-08-22", source:"iRunFar", link:"https://www.irunfar.com/utmb-2026-preview", summary:"Jim Walmsley enters UTMB 2026 chasing a third straight victory at the 106-mile Alpine ultra, but faces the deepest men's field in race history.", category:"trail" },
+{ title:"Nike Alphafly 4 launches with redesigned Air Zoom unit and wider forefoot", date:"2026-06-10", source:"Runner's World", link:"https://www.runnersworld.com/gear/a61850000/nike-alphafly-4-review/", summary:"Nike released the Alphafly 4 with a completely redesigned Air Zoom unit that sits lower in the forefoot and a wider platform.", category:"gear" },
+{ title:"Jacob Kiplimo shatters half marathon world record in Barcelona", date:"2026-02-16", source:"World Athletics", link:"https://worldathletics.org/news/report/jacob-kiplimo-half-marathon-world-record-barcelona-2026", summary:"Jacob Kiplimo became the first man to break 57 minutes for the half marathon, clocking 56:42 at the Barcelona Half Marathon.", category:"records" }
+        ];
+      }
+
+      // Extract unique categories
+      var cats = [];
+      var seenCats = {};
+      ALL_ARTICLES.forEach(function(a) {
+        if (!seenCats[a.category]) { seenCats[a.category] = true; cats.push(a.category); }
+      });
+
+      buildFilterChips(cats);
+      filterAndRender();
+    })
+    .catch(function() {
+      // On error, show empty state
+      document.getElementById("news-empty").classList.remove("hidden");
+      document.getElementById("news-count").textContent = "0 articles";
+    });
 })();
 </script>
 

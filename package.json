@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "publish": "bash publish.sh"
+    "publish": "bash publish.sh",
+    "fetch-news": "node src/news-pipeline.js"
   }
 }
