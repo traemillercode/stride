@@ -253,6 +253,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathname === "/resources/music") {
+    servePage(res, "music.html");
+    return;
+  }
+
   // Content pages
   if (pathname === "/races") {
     servePage(res, "races.html");
