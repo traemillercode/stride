@@ -37,6 +37,91 @@
 <script src="/static/moderation.js"></script>
 <script>
 (function() {
+  // ── Source SVG icons ──
+  var SOURCE_ICONS = {
+    garmin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="10,2 22,12 10,22 10,14 2,14 2,10 10,10"/></svg>',
+    strava: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,18 12,6 18,18"/><polyline points="9,14 12,10 15,14"/></svg>',
+    coros: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="7"/><path d="M12 8V6"/><path d="M12 17v1"/><path d="M8 12H6"/><path d="M18 12h-2"/></svg>',
+    apple_health: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 13.5c-.2 2.5-2.3 4.5-4.8 4.5-1.7 0-3-1-4-2-1 1-2.3 2-4 2-2.5 0-4.5-2-4.8-4.5-.1-1 .1-2 .6-2.7C5.5 8.5 9 6 12 6s6.5 2.5 8.2 4.8c.5.7.7 1.7.6 2.7z"/></svg>',
+    manual: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+  };
+
+  var SOURCE_LABELS = {
+    garmin: "via Garmin",
+    strava: "via Strava",
+    coros: "via Coros",
+    apple_health: "via Apple Health",
+    manual: "manual entry",
+  };
+
+  // ── Format helpers ──
+  function fmtPace(secsPerMi) {
+    var min = Math.floor(secsPerMi / 60);
+    var sec = Math.round(secsPerMi % 60);
+    return min + ":" + (sec < 10 ? "0" : "") + sec;
+  }
+
+  function fmtDuration(totalSecs) {
+    var h = Math.floor(totalSecs / 3600);
+    var m = Math.floor((totalSecs % 3600) / 60);
+    var s = Math.round(totalSecs % 60);
+    if (h > 0) {
+      return h + ":" + (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+    }
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+
+  // ── Activity card renderer ──
+  function renderActivityCard(a) {
+    var html = '';
+    html += '<div class="card-dark" data-user="' + a.user + '" style="margin-bottom:8px;padding:16px;">';
+
+    // Top row: user name + relative time
+    html += '<div class="flex items-center justify-between">';
+    html += '<span class="text-sm font-semibold">' + a.user + '</span>';
+    html += '<span class="text-xs text-dim">' + a.time + '</span>';
+    html += '</div>';
+
+    // Stats row (if activity data exists)
+    if (a.activity && (a.activity.distanceMi || a.activity.avgPaceSecsPerMi || a.activity.durationSecs)) {
+      html += '<div class="activity-stats">';
+      if (a.activity.distanceMi) {
+        html += '<span class="activity-stat-distance">' + a.activity.distanceMi.toFixed(1) + ' mi</span>';
+      }
+      if (a.activity.avgPaceSecsPerMi) {
+        html += '<span class="activity-stat-pace">' + fmtPace(a.activity.avgPaceSecsPerMi) + ' /mi</span>';
+      }
+      if (a.activity.durationSecs) {
+        html += '<span class="activity-stat-duration">' + fmtDuration(a.activity.durationSecs) + '</span>';
+      }
+      html += '</div>';
+    }
+
+    // Narrative (if present)
+    if (a.narrative) {
+      html += '<p class="activity-narrative">' + a.narrative + '</p>';
+    }
+
+    // Bottom row: source badge + location
+    html += '<div class="activity-meta">';
+    if (a.source && a.source.platform) {
+      var plat = a.source.platform;
+      html += '<span class="source-badge src-' + plat + '">';
+      html += (SOURCE_ICONS[plat] || SOURCE_ICONS.manual);
+      html += (SOURCE_LABELS[plat] || "manual entry");
+      html += '</span>';
+    }
+    if (a.location && a.location.city) {
+      var loc = a.location.city + (a.location.state ? ", " + a.location.state : "");
+      html += '<span class="activity-location">' + loc + '</span>';
+    }
+    html += '</div>';
+
+    html += '<div class="mod-insert" data-mod-user="' + a.user + '"></div>';
+    html += '</div>';
+    return html;
+  }
+
   var PACE_BANDS = {
     "sub-7": {
       label: "Sub-7:00 /mi",
@@ -47,9 +132,9 @@
       accentColor: "var(--cobalt)",
       memberCount: "890",
       activity: [
-        { user: "Erik S.", action: "posted splits from his 2:34 marathon tune-up: 5:52 avg pace for 20 miles", time: "1 hour ago" },
-        { user: "Coach T", action: "shared a threshold workout: 6x1 mile at 10K pace with 60s jog recovery", time: "4 hours ago" },
-        { user: "Leah P.", action: "asked: 'Favorite carbon-plated racer for narrow feet?' — 16 replies", time: "7 hours ago" },
+        { user: "Erik S.", activity: { type: "run", distanceMi: 20.0, durationSecs: 7040, avgPaceSecsPerMi: 352 }, source: { platform: "garmin" }, location: { city: "Denver", state: "CO" }, time: "1 hour ago", narrative: "tune-up run for upcoming marathon" },
+        { user: "Coach T", activity: null, source: { platform: "manual" }, location: null, time: "4 hours ago", narrative: "shared a threshold workout: 6×1 mile at 10K pace with 60s jog recovery" },
+        { user: "Leah P.", activity: null, source: { platform: "manual" }, location: null, time: "7 hours ago", narrative: "asked: \u201CFavorite carbon-plated racer for narrow feet?\u201D — 16 replies" },
       ]
     },
     "7-9": {
@@ -61,9 +146,9 @@
       accentColor: "var(--violet)",
       memberCount: "2.1K",
       activity: [
-        { user: "Jordan R.", action: "logged a 14-mile long run at 7:55 pace in 90-degree heat. 'Not pretty but got it done.'", time: "2 hours ago" },
-        { user: "Sophia M.", action: "shared her sub-1:40 half marathon race plan with pacing splits", time: "5 hours ago" },
-        { user: "Dan W.", action: "asked: 'How do you handle speedwork during summer humidity?' — 23 replies", time: "9 hours ago" },
+        { user: "Jordan R.", activity: { type: "run", distanceMi: 14.0, durationSecs: 6650, avgPaceSecsPerMi: 475 }, source: { platform: "strava" }, location: { city: "Austin", state: "TX" }, time: "2 hours ago", narrative: "logged a long run in 90\u00B0 heat. \u201CNot pretty but got it done.\u201D" },
+        { user: "Sophia M.", activity: null, source: { platform: "manual" }, location: null, time: "5 hours ago", narrative: "shared her sub-1:40 half marathon race plan with pacing splits" },
+        { user: "Dan W.", activity: null, source: { platform: "manual" }, location: null, time: "9 hours ago", narrative: "asked: \u201CHow do you handle speedwork during summer humidity?\u201D — 23 replies" },
       ]
     },
     "9-11": {
@@ -75,9 +160,9 @@
       accentColor: "var(--magenta)",
       memberCount: "3.4K",
       activity: [
-        { user: "Rachel K.", action: "completed her first double-digit run — 10 miles at 10:15 pace", time: "1 hour ago" },
-        { user: "Mike D.", action: "asked: 'Heart rate zones seem off with my watch. Should I trust feel instead?'", time: "3 hours ago" },
-        { user: "Coach L.", action: "posted a guide on negative splitting for first-time half marathoners", time: "8 hours ago" },
+        { user: "Rachel K.", activity: { type: "run", distanceMi: 10.0, durationSecs: 6150, avgPaceSecsPerMi: 615 }, source: { platform: "apple_health" }, location: { city: "Portland", state: "OR" }, time: "1 hour ago", narrative: "completed her first double-digit run" },
+        { user: "Mike D.", activity: null, source: { platform: "manual" }, location: null, time: "3 hours ago", narrative: "asked: \u201CHeart rate zones seem off with my watch. Should I trust feel instead?\u201D" },
+        { user: "Coach L.", activity: null, source: { platform: "manual" }, location: null, time: "8 hours ago", narrative: "posted a guide on negative splitting for first-time half marathoners" },
       ]
     },
     "11-plus": {
@@ -89,15 +174,15 @@
       accentColor: "var(--lime)",
       memberCount: "1.6K",
       activity: [
-        { user: "Tanya G.", action: "finished her first 5K using run/walk intervals — 38:24 and smiling", time: "2 hours ago" },
-        { user: "Pat J.", action: "asked: 'Best shoes for heavier runners?' — 19 thoughtful recommendations", time: "5 hours ago" },
-        { user: "Coach Em", action: "posted: 'Comparison is the thief of joy. Your 13-minute mile counts just as much.'", time: "11 hours ago" },
+        { user: "Tanya G.", activity: { type: "run", distanceMi: 3.1, durationSecs: 2304, avgPaceSecsPerMi: 743 }, source: { platform: "coros" }, location: { city: "Atlanta", state: "GA" }, time: "2 hours ago", narrative: "finished her first 5K using run/walk intervals — 38:24 and smiling" },
+        { user: "Pat J.", activity: null, source: { platform: "manual" }, location: null, time: "5 hours ago", narrative: "asked: \u201CBest shoes for heavier runners?\u201D — 19 thoughtful recommendations" },
+        { user: "Coach Em", activity: null, source: { platform: "manual" }, location: null, time: "11 hours ago", narrative: "posted: \u201CComparison is the thief of joy. Your 13-minute mile counts just as much.\u201D" },
       ]
     },
   };
 
-  var path = window.location.pathname;
-  var slug = path.split("/").pop() || "sub-7";
+  var pathname = window.location.pathname;
+  var slug = pathname.split("/").pop() || "sub-7";
   var band = PACE_BANDS[slug] || PACE_BANDS["sub-7"];
 
   var container = document.getElementById("pace-content");
@@ -127,12 +212,7 @@
 
     if (band.activity && band.activity.length > 0) {
       band.activity.forEach(function(a) {
-        activity += '<div class="card-dark" data-user="' + a.user + '" style="margin-bottom:8px;padding:16px;">';
-        activity += '<span class="text-sm font-semibold">' + a.user + '</span> ';
-        activity += '<span class="text-sm text-muted">' + a.action + '</span>';
-        activity += '<span class="block text-xs text-dim mt-1">' + a.time + '</span>';
-        activity += '<div class="mod-insert" data-mod-user="' + a.user + '"></div>';
-        activity += '</div>';
+        activity += renderActivityCard(a);
       });
     } else {
       activity += '<div class="empty-state"><p class="text-muted">No runners here yet — be the first.</p><a href="/onboarding/first-timer" class="btn btn-primary mt-4" style="font-size:13px;">Map your roadmap</a></div>';
@@ -148,7 +228,6 @@
         var user = inserts[i].getAttribute("data-mod-user");
         if (user) { inserts[i].appendChild(moderationActions(user)); }
       }
-      // Re-run hideBlockedContent in case any were blocked
       if (typeof hideBlockedContent === "function") hideBlockedContent();
     } catch(e) {}
   }, 300);
