@@ -6,6 +6,9 @@
 <title>The Split — Running news — Stride</title>
 <link rel="stylesheet" href="/static/style.css">
 <link rel="icon" href="/static/brand-mark.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/static/supabase.js"></script>
+<script src="/static/save-widget.js" defer></script>
 </head>
 <body>
 
@@ -16,7 +19,7 @@
       <a href="/races" class="nav-link">Races</a>
       <a href="/resources" class="nav-link">Resources</a>
       <a href="/community">Community</a>
-      <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
+      <span id="nav-auth-area"></span>
     </nav>
   </div>
 </header>
@@ -111,6 +114,10 @@
     }
 
     html += '<a href="' + a.link + '" target="_blank" rel="noopener" class="inline-block mt-3 text-sm font-semibold" style="color:' + catColor.color + ';text-decoration:underline;text-underline-offset:2px;">Read more →</a>';
+
+    html += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">';
+    html += '<button class="btn btn-secondary save-btn" style="font-size:11px;position:relative;padding:5px 10px;" data-item-type="news" data-item-id="' + (a.link || '').replace(/"/g,'&quot;') + '" data-item-title="' + decodeEntities(a.title).replace(/"/g,'&quot;') + '" data-item-url="' + (a.link || '').replace(/"/g,'&quot;') + '" data-item-description="' + (a.source || '') + '">Save to board</button>';
+    html += '</div>';
 
     html += '</div>';
     return html;

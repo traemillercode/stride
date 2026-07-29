@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My boards — Stride</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="/static/brand-mark.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/static/supabase.js"></script>
+<style>
+  .boards-container { max-width:800px; margin:40px auto; padding:0 24px; }
+  .page-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:32px; }
+  .board-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:20px 24px; cursor:pointer; transition:border-color 0.15s; display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .board-card:hover { border-color:var(--border-visible); }
+  .board-card.active { border-color:var(--cobalt); border-width:2px; padding:19px 23px; }
+  .board-name { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:700; }
+  .board-meta { font-size:12px; color:var(--text-dim); }
+  .pin-item { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .pin-info { flex:1; min-width:0; }
+  .pin-title { font-weight:600; font-size:14px; color:var(--charcoal); }
+  .pin-title a { color:var(--cobalt); text-decoration:underline; text-underline-offset:2px; }
+  .pin-title a:hover { color:var(--violet); }
+  .pin-meta { font-size:12px; color:var(--text-dim); margin-top:2px; }
+  .type-badge-sm { display:inline-block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; padding:2px 8px; border-radius:20px; }
+  .badge-playlist { background:rgba(108,60,225,0.12); color:var(--violet); }
+  .badge-race { background:rgba(30,94,245,0.12); color:var(--cobalt); }
+  .badge-resource { background:rgba(132,204,22,0.12); color:#3F6212; }
+  .badge-gear { background:rgba(190,24,93,0.12); color:var(--magenta); }
+  .badge-route { background:rgba(108,60,225,0.12); color:var(--violet); }
+  .remove-btn { font-size:11px; color:var(--text-dim); cursor:pointer; background:none; border:1px solid var(--border-visible); border-radius:var(--radius); padding:4px 10px; font-family:inherit; white-space:nowrap; }
+  .remove-btn:hover { color:var(--magenta); border-color:var(--magenta); }
+  .delete-board-btn { font-size:11px; color:var(--text-dim); cursor:pointer; background:none; border:1px solid var(--border-visible); border-radius:var(--radius); padding:4px 10px; font-family:inherit; }
+  .delete-board-btn:hover { color:var(--magenta); border-color:var(--magenta); }
+  .empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:999; display:flex; align-items:center; justify-content:center; }
+  .modal { background:#fff; border-radius:var(--radius); padding:28px; max-width:440px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.15); }
+  .modal h2 { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:700; margin-bottom:16px; }
+  .toggle-switch { position:relative; display:inline-block; width:44px; height:24px; }
+  .toggle-switch input { display:none; }
+  .toggle-slider { position:absolute; inset:0; background:var(--surface-3); border-radius:24px; cursor:pointer; transition:background 0.2s; }
+  .toggle-slider::before { content:''; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:transform 0.2s; }
+  .toggle-switch input:checked + .toggle-slider { background:var(--cobalt); }
+  .toggle-switch input:checked + .toggle-slider::before { transform:translateX(20px); }
+  .loading { text-align:center; padding:60px 20px; color:var(--text-muted); }
+  .form-group { margin-bottom:16px; }
+  .form-group label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--charcoal); }
+  .form-group input, .form-group textarea { width:100%; }
+
+  .user-nav { display:flex; align-items:center; gap:12px; }
+  .user-nav-avatar { width:32px; height:32px; border-radius:50%; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--text-muted); }
+  .user-nav-name { font-size:13px; font-weight:600; color:var(--charcoal); }
+  .sign-out-btn { font-size:12px; color:var(--text-muted); cursor:pointer; background:none; border:none; font-family:inherit; padding:0; }
+  .sign-out-btn:hover { color:var(--magenta); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav" id="main-nav">
+      <a href="/races" class="nav-link">Races</a>
+      <a href="/resources" class="nav-link">Resources</a>
+      <a href="/community" class="nav-link">Community</a>
+      <span id="nav-auth-area"></span>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="boards-container" id="boards-content">
+    <div class="loading">Loading your boards...</div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p>Stride — Built for every runner</p>
+  <div class="links"><a href="/races" class="nav-link">Races</a><a href="/resources" class="nav-link">Resources</a><a href="/community">Community</a><span aria-hidden="true" style="color:var(--text-dim);margin:0 8px;">|</span><a href="/contact" class="nav-link">Contact</a>
+    <a href="/privacy" class="nav-link">Privacy</a><a href="/terms" class="nav-link">Terms</a><a href="/cookies" class="nav-link">Cookies</a><a href="/dmca" class="nav-link">DMCA</a>
+    <a href="/data-deletion" class="nav-link">Data deletion</a><a href="/health-disclosure" class="nav-link">Health disclosure</a><a href="/accessibility" class="nav-link">Accessibility</a></div>
+</footer>
+
+<script>
+(function() {
+  var container = document.getElementById('boards-content');
+  var navAuth = document.getElementById('nav-auth-area');
+  var currentUser = null;
+  var boards = [];
+  var selectedBoardId = null;
+
+  function getInitials(name) {
+    if (!name) return '?';
+    return name.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().substring(0, 2);
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    var d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  }
+
+  function renderNavAuth(user) {
+    if (user) {
+      var dn = (user.user_metadata && user.user_metadata.display_name) || user.email || 'Runner';
+      navAuth.innerHTML =
+        '<div class="user-nav">' +
+          '<div class="user-nav-avatar">' + getInitials(dn) + '</div>' +
+          '<a href="/profile" class="user-nav-name">' + dn + '</a>' +
+          '<a href="/boards" class="user-nav-name" style="font-weight:700;color:var(--cobalt);">My boards</a>' +
+          '<button class="sign-out-btn" onclick="StrideAuth.signOut(function(){window.location.href=\'/\'})">Sign out</button>' +
+        '</div>';
+    } else {
+      navAuth.innerHTML = '<a href="/auth/signin" class="nav-link" style="font-weight:600;color:var(--cobalt);">Sign in</a>';
+    }
+  }
+
+  function getSession(cb) {
+    StrideAuth.getSession(function(err, session) {
+      cb(err, session);
+    });
+  }
+
+  function loadBoards(cb) {
+    getSession(function(err, session) {
+      if (err || !session) { cb('Not authenticated'); return; }
+      fetch('/api/boards', {
+        headers: { 'Authorization': 'Bearer ' + session.access_token }
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          boards = data.boards || [];
+          cb(null, boards);
+        })
+        .catch(function(e) { cb(e.message); });
+    });
+  }
+
+  function loadBoardPins(boardId, cb) {
+    getSession(function(err, session) {
+      var headers = {};
+      if (session) headers['Authorization'] = 'Bearer ' + session.access_token;
+      fetch('/api/boards/' + boardId + '/pins', { headers: headers })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { cb(null, data.pins || []); })
+        .catch(function(e) { cb(e.message); });
+    });
+  }
+
+  function renderMain() {
+    StrideAuth.getCurrentUser(function(err, user) {
+      if (err || !user) {
+        renderNavAuth(null);
+        container.innerHTML =
+          '<div class="empty-state" style="padding:80px 20px;">' +
+            '<h2 class="font-display" style="font-size:24px;margin-bottom:12px;">Sign in to view your boards</h2>' +
+            '<p class="text-muted">Save resources, races, playlists, and gear to your personal boards.</p>' +
+            '<a href="/auth/signin" class="btn btn-primary" style="margin-top:20px;">Sign in</a>' +
+            '<p style="margin-top:12px;font-size:13px;color:var(--text-dim);">New to Stride? <a href="/auth/signup" style="color:var(--cobalt);text-decoration:underline;">Create an account</a></p>' +
+          '</div>';
+        return;
+      }
+
+      currentUser = user;
+      renderNavAuth(user);
+
+      loadBoards(function(err, loadedBoards) {
+        if (err) {
+          container.innerHTML = '<div class="empty-state"><p>Could not load boards. ' + err + '</p></div>';
+          return;
+        }
+        boards = loadedBoards;
+        renderBoardsList();
+      });
+    });
+  }
+
+  function renderBoardsList() {
+    var html = '';
+
+    html += '<div class="page-header">';
+    html += '<div><h1 class="font-display" style="font-size:36px;margin-bottom:4px;">My boards</h1>';
+    html += '<p class="text-sm text-muted">' + boards.length + ' board' + (boards.length !== 1 ? 's' : '') + '</p></div>';
+    html += '<button class="btn btn-primary" id="create-board-btn" style="padding:10px 20px;font-size:13px;">+ Create new board</button>';
+    html += '</div>';
+
+    if (boards.length === 0) {
+      html += '<div class="empty-state" style="padding:40px 20px;border:1px dashed var(--border-visible);border-radius:var(--radius);">';
+      html += '<p style="font-size:15px;">No boards yet. Create one to start saving resources, races, and playlists.</p>';
+      html += '</div>';
+    } else {
+      html += '<div id="boards-list">';
+      boards.forEach(function(b) {
+        var isActive = selectedBoardId === b.id;
+        html += '<div class="board-card' + (isActive ? ' active' : '') + '" data-board-id="' + b.id + '">';
+        html += '<div style="flex:1;min-width:0;">';
+        html += '<div class="board-name">' + escHtml(b.name) + '</div>';
+        html += '<div class="board-meta">' + b.pin_count + ' pin' + (b.pin_count !== 1 ? 's' : '') + ' · ' + (b.is_public ? 'Public' : 'Private') + ' · Created ' + formatDate(b.created_at) + '</div>';
+        html += '</div>';
+        html += '<button class="delete-board-btn" data-delete-id="' + b.id + '" title="Delete board">Delete</button>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Board detail section
+    if (selectedBoardId) {
+      html += '<div id="board-detail" class="mt-8">';
+      html += '<div class="loading" style="padding:20px;">Loading pins...</div>';
+      html += '</div>';
+    }
+
+    container.innerHTML = html;
+
+    // Event listeners
+    var createBtn = document.getElementById('create-board-btn');
+    if (createBtn) {
+      createBtn.addEventListener('click', showCreateModal);
+    }
+
+    // Board card clicks
+    document.querySelectorAll('.board-card').forEach(function(card) {
+      card.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-board-btn')) return;
+        var bid = card.getAttribute('data-board-id');
+        selectedBoardId = (selectedBoardId === bid) ? null : bid;
+        renderBoardsList();
+        if (selectedBoardId) loadAndRenderBoardDetail(selectedBoardId);
+      });
+    });
+
+    // Delete board buttons
+    document.querySelectorAll('.delete-board-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var bid = btn.getAttribute('data-delete-id');
+        if (confirm('Delete this board and all its pins? This cannot be undone.')) {
+          deleteBoard(bid);
+        }
+      });
+    });
+
+    if (selectedBoardId) loadAndRenderBoardDetail(selectedBoardId);
+  }
+
+  function loadAndRenderBoardDetail(boardId) {
+    var detailEl = document.getElementById('board-detail');
+    if (!detailEl) return;
+
+    var board = boards.find(function(b) { return b.id === boardId; });
+    loadBoardPins(boardId, function(err, pins) {
+      var html = '<div style="border-top:1px solid var(--border);padding-top:24px;">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">';
+      html += '<h2 class="font-display" style="font-size:22px;">' + escHtml(board ? board.name : 'Board') + '</h2>';
+      html += '<button class="btn btn-secondary" id="close-detail" style="padding:6px 14px;font-size:12px;">Close</button>';
+      html += '</div>';
+
+      if (!pins || pins.length === 0) {
+        html += '<div class="empty-state" style="padding:40px 20px;border:1px dashed var(--border-visible);border-radius:var(--radius);">';
+        html += '<p style="font-size:14px;">No pins yet. Save resources, races, or playlists to get started.</p>';
+        html += '</div>';
+      } else {
+        html += '<div id="pins-list">';
+        pins.forEach(function(p) {
+          html += '<div class="pin-item">';
+          html += '<div class="pin-info">';
+          html += '<span class="type-badge-sm badge-' + p.item_type + '">' + p.item_type + '</span>';
+          html += '<div class="pin-title"><a href="' + escHtml(p.item_url) + '" target="_blank" rel="noopener">' + escHtml(p.item_title) + '</a></div>';
+          if (p.item_description) {
+            html += '<div class="pin-meta">' + escHtml(p.item_description) + '</div>';
+          }
+          html += '<div class="pin-meta">Added ' + formatDate(p.created_at) + '</div>';
+          html += '</div>';
+          html += '<button class="remove-btn" data-pin-id="' + p.id + '">Remove</button>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+
+      html += '</div>';
+      detailEl.innerHTML = html;
+
+      // Close detail
+      var closeBtn = document.getElementById('close-detail');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+          selectedBoardId = null;
+          renderBoardsList();
+        });
+      }
+
+      // Remove pin buttons
+      document.querySelectorAll('.remove-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var pinId = btn.getAttribute('data-pin-id');
+          removePin(boardId, pinId);
+        });
+      });
+    });
+  }
+
+  function showCreateModal() {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML =
+      '<div class="modal">' +
+        '<h2>Create new board</h2>' +
+        '<div class="form-group">' +
+          '<label for="board-name">Board name</label>' +
+          '<input type="text" id="board-name" placeholder="e.g. Spring marathon prep" maxlength="100">' +
+        '</div>' +
+        '<div class="form-group">' +
+          '<label for="board-desc">Description (optional)</label>' +
+          '<textarea id="board-desc" rows="2" placeholder="What's this board for?" maxlength="300"></textarea>' +
+        '</div>' +
+        '<div class="form-group" style="display:flex;align-items:center;gap:12px;">' +
+          '<label class="toggle-switch">' +
+            '<input type="checkbox" id="board-public">' +
+            '<span class="toggle-slider"></span>' +
+          '</label>' +
+          '<label for="board-public" style="margin-bottom:0;cursor:pointer;">Make this board public</label>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">' +
+          '<button class="btn btn-secondary" id="modal-cancel" style="font-size:13px;">Cancel</button>' +
+          '<button class="btn btn-primary" id="modal-create" style="font-size:13px;">Create board</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('modal-cancel').addEventListener('click', function() { overlay.remove(); });
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+
+    document.getElementById('modal-create').addEventListener('click', function() {
+      var name = document.getElementById('board-name').value.trim();
+      var desc = document.getElementById('board-desc').value.trim();
+      var isPublic = document.getElementById('board-public').checked;
+
+      if (!name) {
+        document.getElementById('board-name').style.borderColor = 'var(--magenta)';
+        return;
+      }
+
+      getSession(function(err, session) {
+        if (err || !session) { alert('Please sign in again.'); return; }
+        fetch('/api/boards', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + session.access_token
+          },
+          body: JSON.stringify({ name: name, description: desc, is_public: isPublic })
+        })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.error) { alert(data.error); return; }
+            overlay.remove();
+            // Refresh boards list
+            loadBoards(function() { renderBoardsList(); });
+          })
+          .catch(function() { alert('Failed to create board.'); });
+      });
+    });
+  }
+
+  function deleteBoard(boardId) {
+    getSession(function(err, session) {
+      if (err || !session) return;
+      fetch('/api/boards/' + boardId, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + session.access_token }
+      })
+        .then(function(r) { return r.json(); })
+        .then(function() {
+          if (selectedBoardId === boardId) selectedBoardId = null;
+          loadBoards(function() { renderBoardsList(); });
+        })
+        .catch(function() { alert('Failed to delete board.'); });
+    });
+  }
+
+  function removePin(boardId, pinId) {
+    getSession(function(err, session) {
+      if (err || !session) return;
+      fetch('/api/boards/' + boardId + '/pins/' + pinId, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + session.access_token }
+      })
+        .then(function(r) { return r.json(); })
+        .then(function() {
+          loadAndRenderBoardDetail(boardId);
+          // Update pin count in boards list
+          loadBoards(function() {
+            var idx = boards.findIndex(function(b) { return b.id === boardId; });
+            if (idx >= 0) boards[idx].pin_count = Math.max(0, (boards[idx].pin_count || 1) - 1);
+            renderBoardsList();
+          });
+        })
+        .catch(function() { alert('Failed to remove pin.'); });
+    });
+  }
+
+  function escHtml(s) {
+    if (!s) return '';
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  renderMain();
+})();
+</script>
+
+</body>
+</html>

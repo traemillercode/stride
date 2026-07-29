@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign up — Stride</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="/static/brand-mark.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/static/supabase.js"></script>
+<style>
+  .auth-container { max-width:440px; margin:60px auto; padding:0 24px; }
+  .auth-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:32px; }
+  .auth-title { font-size:28px; margin-bottom:8px; }
+  .form-group { margin-bottom:20px; }
+  .form-group label { display:block; font-size:13px; font-weight:600; color:var(--text-muted); margin-bottom:6px; }
+  .form-input { width:100%; padding:12px 14px; border:1px solid var(--border-visible); border-radius:var(--radius); font-size:15px; font-family:inherit; background:var(--surface-1); color:var(--charcoal); transition:border-color 0.15s; }
+  .form-input:focus { outline:none; border-color:var(--cobalt); box-shadow:0 0 0 3px rgba(30,94,245,0.1); }
+  .form-error { background:#FFF0F0; color:#BE185D; padding:10px 14px; border-radius:var(--radius); font-size:13px; margin-bottom:16px; display:none; }
+  .form-error.show { display:block; }
+  .auth-footer { text-align:center; margin-top:20px; font-size:13px; color:var(--text-muted); }
+  .auth-footer a { color:var(--cobalt); text-decoration:underline; text-underline-offset:2px; font-weight:600; }
+  .btn-block { width:100%; padding:14px; font-size:15px; }
+  .site-header { border-bottom:1px solid var(--border); background:var(--surface-1); }
+  .site-header .inner { max-width:1200px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .site-logo { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:22px; letter-spacing:-0.02em; color:var(--charcoal); }
+  .site-nav { display:flex; gap:24px; align-items:center; }
+  .nav-link { font-size:14px; font-weight:500; color:var(--text-muted); }
+  .nav-link:hover { color:var(--charcoal); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav">
+      <a href="/races" class="nav-link">Races</a>
+      <a href="/resources" class="nav-link">Resources</a>
+      <a href="/community" class="nav-link">Community</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="auth-container">
+    <div class="auth-card">
+      <h1 class="font-display auth-title">Create your account</h1>
+      <p class="text-muted text-sm" style="margin-bottom:24px;">Join the Stride running community.</p>
+
+      <div id="form-error" class="form-error"></div>
+
+      <form id="signup-form" autocomplete="on">
+        <div class="form-group">
+          <label for="display-name">Display name</label>
+          <input id="display-name" class="form-input" type="text" placeholder="e.g. trail_runner42" required minlength="2" maxlength="40" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input id="email" class="form-input" type="email" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input id="password" class="form-input" type="password" placeholder="At least 8 characters" required minlength="8" autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Create account</button>
+      </form>
+    </div>
+    <p class="auth-footer">Already have an account? <a href="/auth/signin">Sign in</a></p>
+  </div>
+</main>
+
+<script>
+(function() {
+  var form = document.getElementById('signup-form');
+  var errorEl = document.getElementById('form-error');
+  var submitBtn = document.getElementById('submit-btn');
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.classList.add('show');
+  }
+  function clearError() {
+    errorEl.textContent = '';
+    errorEl.classList.remove('show');
+  }
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    clearError();
+
+    var displayName = document.getElementById('display-name').value.trim();
+    var email = document.getElementById('email').value.trim();
+    var password = document.getElementById('password').value;
+
+    if (!displayName || displayName.length < 2) {
+      showError('Display name must be at least 2 characters.');
+      return;
+    }
+    if (!email) {
+      showError('Please enter your email address.');
+      return;
+    }
+    if (!password || password.length < 8) {
+      showError('Password must be at least 8 characters.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating account...';
+
+    StrideAuth.signUp(email, password, displayName, function(err, data) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create account';
+
+      if (err) {
+        if (err.message && err.message.includes('duplicate')) {
+          showError('An account with this email already exists. Try signing in instead.');
+        } else if (err.message && err.message.includes('password')) {
+          showError('Password is too weak. Try a longer password with more variety.');
+        } else {
+          showError(err.message || 'Something went wrong. Please try again.');
+        }
+        return;
+      }
+
+      // Success — redirect to profile
+      window.location.href = '/profile';
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
