@@ -19,7 +19,7 @@
 
 <main>
 <div class="container py-12" id="plan-app">
-  <a href="/" class="text-sm text-cobalt" style="text-decoration:underline;">← Back to roadmap</a>
+  <a href="/" class="text-sm text-cobalt" style="text-decoration:underline;">← Back to Stride</a>
   <div id="plan-content" class="mt-6"></div>
 </div>
 </main>
@@ -311,12 +311,16 @@
     var weekGrid = h("div", { className: "mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" });
     plan.weeks.forEach(function(week) {
       var card = h("div", { className: "card-dark " + getPhaseBg(week.phase) });
-      var header = h("div", { className: "flex items-center justify-between", style: { cursor: "pointer" } });
+      var header = h("div", { className: "flex items-center justify-between", style: { cursor: "pointer" }, "aria-expanded": "false" });
       var left = h("div", {});
       left.appendChild(h("span", { className: "text-xs font-semibold " + getPhaseColor(week.phase), text: week.phase }));
       left.appendChild(h("span", { className: "mt-1 block font-display text-lg", text: "Week " + week.weekNumber }));
       header.appendChild(left);
-      header.appendChild(h("span", { className: "text-sm text-muted", text: week.totalMileage + " mi" }));
+      var right = h("div", { className: "flex items-center gap-2" });
+      right.appendChild(h("span", { className: "text-sm text-muted", text: week.totalMileage + " mi" }));
+      var chev = h("span", { className: "text-sm text-muted", text: "▸", style: { transition: "transform 0.2s" } });
+      right.appendChild(chev);
+      header.appendChild(right);
 
       var detailId = "w-" + week.weekNumber;
       var detail = h("div", { id: detailId, style: { borderTop: "1px solid var(--border)", paddingTop: "12px", marginTop: "12px" } });
@@ -333,7 +337,10 @@
 
       header.onclick = function() {
         var d = document.getElementById(detailId);
-        d.style.display = d.style.display === "none" ? "block" : "none";
+        var expanded = d.style.display !== "none";
+        d.style.display = expanded ? "none" : "block";
+        header.setAttribute("aria-expanded", expanded ? "false" : "true");
+        chev.textContent = expanded ? "▸" : "▾";
       };
       detail.style.display = "none";
 

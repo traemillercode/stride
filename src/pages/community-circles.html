@@ -62,7 +62,7 @@
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
           <span class="circle-type type-gear" style="background:rgba(30,94,245,0.12);color:var(--cobalt);">Cohort</span>
           <span class="text-xs text-muted">348 members</span>
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;">Join</button>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
         </div>
       </div>
       <div class="circle-card" data-user="circle-boston">
@@ -74,7 +74,7 @@
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
           <span class="circle-type type-gear" style="background:rgba(30,94,245,0.12);color:var(--cobalt);">Cohort</span>
           <span class="text-xs text-muted">512 members</span>
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;">Join</button>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
         </div>
       </div>
     </div>
@@ -91,7 +91,7 @@
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
           <span class="circle-type" style="background:rgba(108,60,225,0.12);color:var(--violet);">Local</span>
           <span class="text-xs text-muted">1.2K members</span>
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;">Join</button>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
         </div>
       </div>
       <div class="circle-card" data-user="circle-nyc">
@@ -103,7 +103,7 @@
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
           <span class="circle-type" style="background:rgba(108,60,225,0.12);color:var(--violet);">Local</span>
           <span class="text-xs text-muted">267 members</span>
-          <button class="btn btn-violet" style="padding:8px 16px;font-size:12px;">Join</button>
+          <button class="btn btn-violet" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
         </div>
       </div>
     </div>
@@ -120,7 +120,7 @@
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
           <span class="circle-type" style="background:rgba(200,255,0,0.12);color:var(--lime);">Interest</span>
           <span class="text-xs text-muted">892 members</span>
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;">Join</button>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
         </div>
       </div>
       <div class="circle-card" data-user="circle-c25k">
@@ -132,7 +132,7 @@
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
           <span class="circle-type" style="background:rgba(200,255,0,0.12);color:var(--lime);">Interest</span>
           <span class="text-xs text-muted">1.8K members</span>
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;">Join</button>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px;min-height:44px;">Join</button>
         </div>
       </div>
     </div>
@@ -149,10 +149,10 @@
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
           <span class="circle-type" style="background:rgba(108,60,225,0.15);color:var(--violet);">Invite-only</span>
           <span class="text-xs text-muted">64 members</span>
-          <div style="display:flex;gap:6px;align-items:center;">
+          <form onsubmit="event.preventDefault();var c=this.querySelector('input').value;if(c)alert('Code submitted: '+c);" style="display:flex;gap:6px;align-items:center;">
             <input type="text" placeholder="Code" style="width:80px;padding:8px;font-size:12px;">
-            <button class="btn btn-violet" style="padding:8px 12px;font-size:12px;">Enter</button>
-          </div>
+            <button type="submit" class="btn btn-violet" style="padding:8px 12px;font-size:12px;min-height:44px;">Enter</button>
+          </form>
         </div>
       </div>
       <div class="circle-card" data-user="circle-coaches" style="border-color:rgba(108,60,225,0.3);background:var(--surface-2);">
@@ -164,10 +164,10 @@
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
           <span class="circle-type" style="background:rgba(108,60,225,0.15);color:var(--violet);">Invite-only</span>
           <span class="text-xs text-muted">128 members</span>
-          <div style="display:flex;gap:6px;align-items:center;">
+          <form onsubmit="event.preventDefault();var c=this.querySelector('input').value;if(c)alert('Code submitted: '+c);" style="display:flex;gap:6px;align-items:center;">
             <input type="text" placeholder="Code" style="width:80px;padding:8px;font-size:12px;">
-            <button class="btn btn-violet" style="padding:8px 12px;font-size:12px;">Enter</button>
-          </div>
+            <button type="submit" class="btn btn-violet" style="padding:8px 12px;font-size:12px;min-height:44px;">Enter</button>
+          </form>
         </div>
       </div>
     </div>
