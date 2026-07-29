@@ -113,6 +113,16 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathname === "/data-deletion") {
+    servePage(res, "data-deletion.html");
+    return;
+  }
+
+  if (pathname === "/health-disclosure") {
+    servePage(res, "health-disclosure.html");
+    return;
+  }
+
   // Page routes
   if (pathname === "/") {
     servePage(res, "home.html");

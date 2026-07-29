@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health &amp; Fitness Data Disclosure — Stride</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav">
+      <a href="/races" class="nav-link">Races</a>
+      <a href="/resources" class="nav-link">Resources</a>
+      <a href="/community">Community</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="section-surface2 section-border-top py-16">
+    <div class="container-narrow">
+      <div class="card p-8 mb-8" style="border-left:4px solid var(--magenta);">
+        <p class="text-sm text-magenta font-semibold">This is a draft policy. Consult legal counsel before relying on it.</p>
+      </div>
+
+      <h1 class="section-heading">Health &amp; fitness data disclosure</h1>
+      <p class="mt-3 text-muted text-lg">What body-adjacent data Stride collects and how it's used</p>
+
+      <div class="mt-10" style="max-width:640px;">
+
+        <!-- NOT MEDICAL ADVICE — prominent warning -->
+        <div class="card p-6 mb-8" style="border-left:4px solid var(--cobalt);">
+          <p class="text-sm leading-relaxed font-semibold" style="color:var(--cobalt);">Stride is not a medical provider.</p>
+          <p class="text-sm leading-relaxed text-muted mt-2">Training plans, pace calculations, mileage targets, injury risk assessments, nutrition guidance, and all other content on Stride are for informational and community purposes only. They are <strong>not</strong> medical advice, diagnosis, or treatment.</p>
+          <p class="text-sm leading-relaxed text-muted mt-2">Consult a qualified physician or healthcare provider before beginning any training program, modifying your exercise routine, or acting on any fitness-related information you find on this platform. Running and endurance training carry inherent risk of injury. You assume full responsibility for your training decisions and physical activity.</p>
+        </div>
+
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">What body-adjacent data Stride collects</h2>
+        <p class="text-sm leading-relaxed text-muted mb-4">When you use Stride — and especially when you connect a device — we may collect the following health- and fitness-related data points:</p>
+        <ul class="text-sm leading-relaxed text-muted" style="padding-left:20px;">
+          <li class="mb-2"><strong>Body weight.</strong> Self-reported during onboarding or pulled from connected device platforms.</li>
+          <li class="mb-2"><strong>Mileage and distance.</strong> Weekly and per-run mileage from connected devices or manual entry.</li>
+          <li class="mb-2"><strong>Injury history.</strong> Self-reported during onboarding — the "easy-run pace" and injury background fields in our plan builder.</li>
+          <li class="mb-2"><strong>Pace data.</strong> Current easy pace, race paces, and historical pace trends from connected devices.</li>
+          <li class="mb-2"><strong>Heart rate.</strong> Resting heart rate, maximum heart rate, and workout heart rate data when available from Garmin, Apple Health, or other connected platforms.</li>
+          <li class="mb-2"><strong>Training load.</strong> Calculated weekly load, intensity distribution, and training stress derived from your activity data.</li>
+          <li class="mb-2"><strong>Race results.</strong> Past race times and distances — both imported from devices and self-reported.</li>
+          <li class="mb-2"><strong>Cadence, elevation, and GPS routes.</strong> Detailed workout-level metrics when provided by connected devices.</li>
+        </ul>
+
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">How this data is used</h2>
+        <p class="text-sm leading-relaxed text-muted mb-4">We use fitness and health data for specific platform features — never for advertising or profiling beyond what powers the tools you've chosen to use:</p>
+        <ul class="text-sm leading-relaxed text-muted" style="padding-left:20px;">
+          <li class="mb-2"><strong>Roadmap and training plan construction.</strong> Your pace, mileage history, injury background, and race goals inform the periodized plans our platform builds. The plan builder's mileage-safety logic — which caps weekly increases and flags potential overtraining — uses your historical data to keep recommendations within safe ranges.</li>
+          <li class="mb-2"><strong>Pace predictions.</strong> Our pace calculator uses established methodologies (Riegel, VDOT) to project race finish times based on your actual training data. These are estimates, not guarantees.</li>
+          <li class="mb-2"><strong>Injury risk flagging.</strong> The platform compares your recent training load against your historical baseline and flags unusually sharp increases. This is a statistical signal, not a medical assessment. If the platform flags a spike, that's a cue to check in with yourself — not a diagnosis.</li>
+          <li class="mb-2"><strong>Community sharing.</strong> Training metrics you choose to share (pace, mileage, race results) appear in community spaces, activity cards, and shared pace groups. You control what's visible.</li>
+          <li class="mb-2"><strong>Race field projections.</strong> Aggregated pace and distance data from users registered for the same race helps power our field-projection tool, which estimates where you might finish relative to the field.</li>
+        </ul>
+
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">You control what you share</h2>
+        <ul class="text-sm leading-relaxed text-muted" style="padding-left:20px;">
+          <li class="mb-2"><strong>Device connections are opt-in.</strong> Stride never pulls data from a device platform without your explicit authorization. You connect Garmin, Strava, Coros, Apple Health, Amazfit, or Suunto through each platform's official OAuth flow, and you can revoke access at any time from your account settings or the device platform's app management page.</li>
+          <li class="mb-2"><strong>Community posts are user-controlled.</strong> You decide what training data appears in community spaces. Pace groups, activity cards, and shared routes are opt-in features — you choose to join a pace group; you choose which activities to post.</li>
+          <li class="mb-2"><strong>Auto-post is off by default.</strong> Stride will offer an opt-in auto-share feature that posts completed workouts to your community feed automatically. This is explicitly opt-in, off by default, and each post is marked with its data source (e.g., "via Garmin").</li>
+          <li class="mb-2"><strong>Data deletion.</strong> You can request full deletion of your data at any time. See our <a href="/data-deletion" class="text-cobalt" style="text-decoration:underline;">Data Deletion</a> page for instructions.</li>
+        </ul>
+
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">Data we do not collect</h2>
+        <p class="text-sm leading-relaxed text-muted mb-4">To be explicit: Stride does not collect or process medical records, blood work, genetic data, sleep data (unless provided by a connected device as part of its standard activity sync), menstrual cycle data, or any data classified as protected health information (PHI) under HIPAA. Stride is not a HIPAA-covered entity.</p>
+
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">Device partners and their policies</h2>
+        <p class="text-sm leading-relaxed text-muted mb-4">When you connect a device platform, your data is also governed by that platform's privacy policy and terms. We recommend reviewing them:</p>
+        <ul class="text-sm leading-relaxed text-muted" style="padding-left:20px;">
+          <li class="mb-2"><strong>Garmin</strong> — garmin.com/legal/privacy</li>
+          <li class="mb-2"><strong>Strava</strong> — strava.com/legal/privacy</li>
+          <li class="mb-2"><strong>Coros</strong> — coros.com/privacy</li>
+          <li class="mb-2"><strong>Apple Health</strong> — apple.com/legal/privacy</li>
+          <li class="mb-2"><strong>Amazfit</strong> — amazfit.com/privacy</li>
+          <li class="mb-2"><strong>Suunto</strong> — suunto.com/privacy</li>
+        </ul>
+
+        <!-- Second prominent warning — closing reminder -->
+        <div class="card p-6 mt-10 mb-8" style="border-left:4px solid var(--violet);">
+          <p class="text-sm leading-relaxed font-semibold" style="color:var(--violet);">Remember: Stride is a training companion, not a coach or clinician.</p>
+          <p class="text-sm leading-relaxed text-muted mt-2">The plans, numbers, and flags this platform produces are tools to support your training — they are not personalized medical or professional coaching advice. Listen to your body. If something hurts or doesn't feel right, stop and consult a qualified professional.</p>
+        </div>
+
+        <h2 class="font-display text-xl font-bold mt-10 mb-4">Related policies</h2>
+        <p class="text-sm leading-relaxed text-muted">
+          Read our <a href="/privacy" class="text-cobalt" style="text-decoration:underline;">Privacy Policy</a> for details on how all your data is collected, stored, and shared, and our <a href="/terms" class="text-cobalt" style="text-decoration:underline;">Terms of Service</a> for the full disclaimer of liability around training guidance.
+        </p>
+
+        <p class="text-xs text-dim mt-12">Last updated: July 28, 2026</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>Stride — Built for every runner</p>
+  <div class="links">
+    <a href="/races" class="nav-link">Races</a>
+    <a href="/resources" class="nav-link">Resources</a>
+    <a href="/community">Community</a>
+    <span aria-hidden="true" style="color:var(--text-dim);margin:0 8px;">|</span>
+    <a href="/privacy" class="nav-link">Privacy</a>
+    <a href="/terms" class="nav-link">Terms</a>
+    <a href="/cookies" class="nav-link">Cookies</a>
+    <a href="/data-deletion" class="nav-link">Data deletion</a>
+    <a href="/health-disclosure" class="nav-link">Health disclosure</a>
+  </div>
+</footer>
+
+<script>
+(function() {
+  if (localStorage.getItem('cookieConsent') === 'true') return;
+  var banner = document.createElement('div');
+  banner.id = 'cookie-banner';
+  banner.innerHTML = '<div style="position:fixed;bottom:0;left:0;right:0;background:var(--surface-1);border-top:1px solid var(--border-visible);padding:16px 24px;z-index:9999;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 -2px 12px rgba(0,0,0,0.06);"><p style="font-size:13px;color:var(--text-muted);margin:0;flex:1;min-width:200px;">Stride uses cookies for core functionality, analytics, and affiliate links. See our <a href="/cookies" style="color:var(--cobalt);text-decoration:underline;">Cookie Policy</a> for details.</p><div style="display:flex;gap:8px;flex-shrink:0;"><button id="cookie-accept" class="btn btn-primary" style="padding:10px 20px;font-size:13px;">Accept all</button><a href="/cookies" class="btn btn-secondary" style="padding:10px 20px;font-size:13px;">Cookie settings</a></div></div>';
+  document.body.appendChild(banner);
+  document.getElementById('cookie-accept').addEventListener('click', function() {
+    localStorage.setItem('cookieConsent', 'true');
+    document.getElementById('cookie-banner').remove();
+  });
+})();
+</script>
+
+</body>
+</html>
