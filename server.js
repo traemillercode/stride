@@ -91,6 +91,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Pace calculator
+  if (pathname === "/pace-calculator") {
+    servePage(res, "pace-calculator.html");
+    return;
+  }
+
   // Page routes
   if (pathname === "/") {
     servePage(res, "home.html");

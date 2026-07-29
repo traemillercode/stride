@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stride — Pace calculator</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a href="/" class="site-logo">Stride</a>
+    <nav class="site-nav">
+      <span class="nav-link">Races</span>
+      <span class="nav-link">Resources</span>
+      <a href="/community">Community</a>
+      <a href="/onboarding/first-timer" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Map your roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="container-sm py-12" id="app">
+  <a href="/" class="text-sm text-cobalt" style="text-decoration:underline;">← Back to Stride</a>
+
+  <h1 class="section-heading mt-6" style="font-size:36px;">Pace calculator</h1>
+  <p class="mt-2 text-muted text-base">Enter a recent race result and we'll work out your equivalent times and training paces.</p>
+
+  <!-- Input form -->
+  <div class="card mt-8 p-6 md:p-8">
+    <!-- Distance -->
+    <div class="mb-6">
+      <label for="distInput">Race distance</label>
+      <div class="flex items-center gap-3">
+        <input type="number" id="distInput" value="3.1" min="0.1" max="200" step="0.1" style="flex:1;max-width:200px;font-size:20px;font-family:'Barlow Condensed',sans-serif;font-weight:700;">
+        <div class="flex" style="border:1px solid var(--border-visible);border-radius:var(--radius);overflow:hidden;">
+          <button id="unitMi" class="btn-stepper" style="border:none;border-radius:0;padding:8px 16px;font-weight:600;font-size:13px;background:var(--cobalt);color:#fff;">mi</button>
+          <button id="unitKm" class="btn-stepper" style="border:none;border-radius:0;padding:8px 16px;font-weight:600;font-size:13px;background:transparent;color:var(--text-muted);">km</button>
+        </div>
+        <div class="flex gap-1 flex-wrap">
+          <button class="chip chip-5k btn-stepper" style="padding:6px 12px;font-size:12px;border-radius:var(--radius);border:1px solid var(--border-visible);background:transparent;color:var(--text-muted);" data-mi="3.11">5K</button>
+          <button class="chip chip-10k btn-stepper" style="padding:6px 12px;font-size:12px;border-radius:var(--radius);border:1px solid var(--border-visible);background:transparent;color:var(--text-muted);" data-mi="6.21">10K</button>
+          <button class="chip chip-half btn-stepper" style="padding:6px 12px;font-size:12px;border-radius:var(--radius);border:1px solid var(--border-visible);background:transparent;color:var(--text-muted);" data-mi="13.11">Half</button>
+          <button class="chip chip-full btn-stepper" style="padding:6px 12px;font-size:12px;border-radius:var(--radius);border:1px solid var(--border-visible);background:transparent;color:var(--text-muted);" data-mi="26.22">Marathon</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Time -->
+    <div class="mb-6">
+      <label>Finish time</label>
+      <div class="flex items-center gap-2" style="max-width:420px;">
+        <input type="number" id="timeH" value="0" min="0" max="99" placeholder="hr" style="flex:1;text-align:center;font-size:20px;font-family:'Barlow Condensed',sans-serif;font-weight:700;">
+        <span class="text-muted font-bold" style="font-size:20px;">:</span>
+        <input type="number" id="timeM" value="25" min="0" max="59" placeholder="min" style="flex:1;text-align:center;font-size:20px;font-family:'Barlow Condensed',sans-serif;font-weight:700;">
+        <span class="text-muted font-bold" style="font-size:20px;">:</span>
+        <input type="number" id="timeS" value="0" min="0" max="59" placeholder="sec" style="flex:1;text-align:center;font-size:20px;font-family:'Barlow Condensed',sans-serif;font-weight:700;">
+      </div>
+    </div>
+
+    <!-- Pace display unit toggle -->
+    <div class="mb-6">
+      <label>Pace display</label>
+      <div class="flex" style="border:1px solid var(--border-visible);border-radius:var(--radius);overflow:hidden;width:fit-content;">
+        <button id="paceUnitMi" class="btn-stepper" style="border:none;border-radius:0;padding:8px 16px;font-weight:600;font-size:13px;background:var(--cobalt);color:#fff;">per mile</button>
+        <button id="paceUnitKm" class="btn-stepper" style="border:none;border-radius:0;padding:8px 16px;font-weight:600;font-size:13px;background:transparent;color:var(--text-muted);">per km</button>
+      </div>
+    </div>
+
+    <button id="calcBtn" class="btn btn-primary" style="padding:14px 32px;font-size:15px;">Calculate my paces</button>
+  </div>
+
+  <!-- Results (hidden until calculated) -->
+  <div id="results" class="hidden mt-10">
+    <!-- Equivalent race times -->
+    <div class="card p-6 md:p-8 mb-6">
+      <h2 class="font-display text-2xl font-bold mb-1">Equivalent race times</h2>
+      <p class="text-sm text-muted mb-6">Predicted using the Riegel formula: T₂ = T₁ × (D₂/D₁)^1.06</p>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="stat-box text-center p-4">
+          <span class="stat-label">5K</span>
+          <span class="stat-value" id="eq-5k" style="font-size:20px;font-family:'Barlow Condensed',sans-serif;">--:--</span>
+        </div>
+        <div class="stat-box text-center p-4">
+          <span class="stat-label">10K</span>
+          <span class="stat-value" id="eq-10k" style="font-size:20px;font-family:'Barlow Condensed',sans-serif;">--:--</span>
+        </div>
+        <div class="stat-box text-center p-4">
+          <span class="stat-label">Half marathon</span>
+          <span class="stat-value" id="eq-half" style="font-size:20px;font-family:'Barlow Condensed',sans-serif;">--:--</span>
+        </div>
+        <div class="stat-box text-center p-4">
+          <span class="stat-label">Marathon</span>
+          <span class="stat-value" id="eq-full" style="font-size:20px;font-family:'Barlow Condensed',sans-serif;">--:--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Training pace zones -->
+    <div class="card p-6 md:p-8 mb-6">
+      <h2 class="font-display text-2xl font-bold mb-1">Training pace zones</h2>
+      <p class="text-sm text-muted mb-6">Training paces calculated using VDOT-based methodology</p>
+      <div class="overflow-hidden">
+        <table class="pace-table">
+          <thead>
+            <tr>
+              <th>Zone</th>
+              <th>Pace range</th>
+              <th>Effort</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="font-semibold text-cobalt">Easy / recovery</td>
+              <td id="zone-easy" style="font-family:'Barlow Condensed',sans-serif;font-size:16px;">--:-- – --:--</td>
+              <td class="text-sm text-muted">Conversational, can talk in full sentences</td>
+            </tr>
+            <tr>
+              <td class="font-semibold text-violet">Marathon pace</td>
+              <td id="zone-marathon" style="font-family:'Barlow Condensed',sans-serif;font-size:16px;">--:-- – --:--</td>
+              <td class="text-sm text-muted">Steady, sustainable for long distances</td>
+            </tr>
+            <tr>
+              <td class="font-semibold text-magenta">Threshold</td>
+              <td id="zone-threshold" style="font-family:'Barlow Condensed',sans-serif;font-size:16px;">--:-- – --:--</td>
+              <td class="text-sm text-muted">Comfortably hard; ~1-hour race pace</td>
+            </tr>
+            <tr>
+              <td class="font-semibold" style="color:var(--charcoal);">Interval</td>
+              <td id="zone-interval" style="font-family:'Barlow Condensed',sans-serif;font-size:16px;">--:-- – --:--</td>
+              <td class="text-sm text-muted">Hard, for repeats of 3–5 minutes with recovery</td>
+            </tr>
+            <tr>
+              <td class="font-semibold" style="color:var(--charcoal);">Repetition</td>
+              <td id="zone-repetition" style="font-family:'Barlow Condensed',sans-serif;font-size:16px;">--:-- – --:--</td>
+              <td class="text-sm text-muted">Very fast, for repeats of 200–400m</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VDOT score -->
+    <div class="card p-6 md:p-8 mb-6" style="border-left:4px solid var(--cobalt);">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <span class="stat-label">Your VDOT score</span>
+          <span id="vdot-score" class="block mt-1" style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--cobalt);">--</span>
+        </div>
+        <div class="text-sm text-muted" style="max-width:340px;">
+          VDOT is a measure of running fitness developed by Dr. Jack Daniels, published in <em>Daniels' Running Formula</em>. It lets you derive equivalent performances and training paces from a single race result.
+        </div>
+      </div>
+    </div>
+
+    <!-- Methodology and resources -->
+    <div class="card p-6" style="background:var(--surface-2);">
+      <h3 class="font-display text-lg font-bold mb-2">Methodology</h3>
+      <p class="text-sm text-muted leading-relaxed mb-3">
+        Equivalent race times use the <strong>Riegel formula</strong> (T₂&nbsp;=&nbsp;T₁&nbsp;×&nbsp;(D₂/D₁)^1.06), an open predictive model published by Peter Riegel in 1977 and widely used across running science.
+      </p>
+      <p class="text-sm text-muted leading-relaxed mb-3">
+        Training paces are calculated using <strong>VDOT-based methodology</strong> from Jack Daniels' <em>Daniels' Running Formula</em> — a publicly documented system that derives training intensities from a single race performance. Zone ranges are approximate; individual physiology varies.
+      </p>
+      <p class="text-sm text-muted leading-relaxed">
+        For another perspective on your training zones, compare with <a href="https://www.mcmillanrunning.com/" target="_blank" rel="noopener" class="text-cobalt font-semibold" style="text-decoration:underline;">McMillan Running's calculator</a> — a respected independent resource.
+      </p>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="empty-state" class="empty-state mt-10">
+    <p class="text-muted">Enter your race details above and hit <strong>Calculate my paces</strong> to see your equivalent race times and training zones.</p>
+  </div>
+</div>
+</main>
+
+<footer class="site-footer">
+  <p>Stride — Built for every runner</p>
+  <div class="links"><span class="nav-link">Races</span><span class="nav-link">Resources</span><a href="/community">Community</a></div>
+</footer>
+
+<script>
+(function() {
+  // === Constants ===
+  var RIEGEL_EXPONENT = 1.06;
+
+  // Distances in miles for Riegel predictions
+  var PREDICT_DISTANCES_MI = {
+    "5K": 3.10686,
+    "10K": 6.21371,
+    "half": 13.1094,
+    "full": 26.2188
+  };
+
+  // Training zone VDOT fractions: [slow end fraction, fast end fraction]
+  var ZONES = {
+    easy:       [0.59, 0.74],
+    marathon:   [0.75, 0.84],
+    threshold:  [0.83, 0.88],
+    interval:   [0.95, 1.00],
+    repetition: [1.00, 1.08]
+  };
+
+  // === State ===
+  var distUnit = "mi";        // input distance unit
+  var paceUnit = "mi";        // pace display unit
+
+  // === DOM refs ===
+  var distInput = document.getElementById("distInput");
+  var timeH = document.getElementById("timeH");
+  var timeM = document.getElementById("timeM");
+  var timeS = document.getElementById("timeS");
+  var unitMi = document.getElementById("unitMi");
+  var unitKm = document.getElementById("unitKm");
+  var paceUnitMi = document.getElementById("paceUnitMi");
+  var paceUnitKm = document.getElementById("paceUnitKm");
+  var calcBtn = document.getElementById("calcBtn");
+  var results = document.getElementById("results");
+  var emptyState = document.getElementById("empty-state");
+
+  // === Unit toggle: distance ===
+  function setDistUnit(unit) {
+    distUnit = unit;
+    if (unit === "mi") {
+      unitMi.style.background = "var(--cobalt)";
+      unitMi.style.color = "#fff";
+      unitKm.style.background = "transparent";
+      unitKm.style.color = "var(--text-muted)";
+    } else {
+      unitKm.style.background = "var(--cobalt)";
+      unitKm.style.color = "#fff";
+      unitMi.style.background = "transparent";
+      unitMi.style.color = "var(--text-muted)";
+    }
+    updateChipLabels();
+  }
+
+  unitMi.onclick = function() { setDistUnit("mi"); };
+  unitKm.onclick = function() { setDistUnit("km"); };
+
+  // === Unit toggle: pace display ===
+  function setPaceUnit(unit) {
+    paceUnit = unit;
+    if (unit === "mi") {
+      paceUnitMi.style.background = "var(--cobalt)";
+      paceUnitMi.style.color = "#fff";
+      paceUnitKm.style.background = "transparent";
+      paceUnitKm.style.color = "var(--text-muted)";
+    } else {
+      paceUnitKm.style.background = "var(--cobalt)";
+      paceUnitKm.style.color = "#fff";
+      paceUnitMi.style.background = "transparent";
+      paceUnitMi.style.color = "var(--text-muted)";
+    }
+  }
+
+  paceUnitMi.onclick = function() { setPaceUnit("mi"); };
+  paceUnitKm.onclick = function() { setPaceUnit("km"); };
+
+  // === Quick-select chips ===
+  function updateChipLabels() {
+    var chips = document.querySelectorAll(".chip");
+    chips.forEach(function(chip) {
+      var mi = parseFloat(chip.getAttribute("data-mi"));
+      if (distUnit === "km") {
+        chip.textContent = (mi * 1.60934).toFixed(1) + "km";
+      } else {
+        chip.textContent = chip.getAttribute("data-orig") || chip.textContent.replace(/km$/, "");
+      }
+    });
+  }
+
+  // Store original labels
+  document.querySelectorAll(".chip").forEach(function(chip) {
+    chip.setAttribute("data-orig", chip.textContent);
+  });
+
+  document.querySelectorAll(".chip").forEach(function(chip) {
+    chip.onclick = function() {
+      var mi = parseFloat(chip.getAttribute("data-mi"));
+      if (distUnit === "km") {
+        distInput.value = (mi * 1.60934).toFixed(1);
+      } else {
+        distInput.value = mi.toFixed(2);
+      }
+      highlightChips(mi);
+      calculate();
+    };
+  });
+
+  function highlightChips(targetMi) {
+    document.querySelectorAll(".chip").forEach(function(chip) {
+      var mi = parseFloat(chip.getAttribute("data-mi"));
+      if (Math.abs(mi - targetMi) < 0.3) {
+        chip.style.background = "var(--cobalt)";
+        chip.style.color = "#fff";
+        chip.style.borderColor = "var(--cobalt)";
+      } else {
+        chip.style.background = "transparent";
+        chip.style.color = "var(--text-muted)";
+        chip.style.borderColor = "var(--border-visible)";
+      }
+    });
+  }
+
+  // Auto-highlight on manual entry
+  distInput.oninput = function() {
+    var mi = getDistanceInMiles();
+    highlightChips(mi);
+  };
+
+  // === Distance helpers ===
+  function getDistanceInMiles() {
+    var val = parseFloat(distInput.value) || 0;
+    if (distUnit === "km") {
+      return val / 1.60934;
+    }
+    return val;
+  }
+
+  function getTotalSeconds() {
+    var h = parseInt(timeH.value) || 0;
+    var m = parseInt(timeM.value) || 0;
+    var s = parseInt(timeS.value) || 0;
+    if (isNaN(h)) h = 0;
+    if (isNaN(m)) m = 0;
+    if (isNaN(s)) s = 0;
+    return h * 3600 + m * 60 + s;
+  }
+
+  // === Riegel formula ===
+  function riegel(t1Seconds, d1Miles, d2Miles) {
+    return t1Seconds * Math.pow(d2Miles / d1Miles, RIEGEL_EXPONENT);
+  }
+
+  // === VDOT calculation ===
+  function calcVDOT(distanceMiles, timeMinutes) {
+    var distanceMeters = distanceMiles * 1609.344;
+    var v = distanceMeters / timeMinutes; // meters per minute
+
+    var vo2 = 0.182258 * v + 0.000104 * v * v - 4.60;
+    var pctMax = 0.8 + 0.000189 * v + 0.000012 * v * v;
+
+    return vo2 / pctMax;
+  }
+
+  // === Velocity from VDOT fraction ===
+  // Given VDOT=V, find velocity v (m/min) for fraction f of VDOT
+  // Solves: (0.182258v + 0.000104v² - 4.60) = V*f*(0.8 + 0.000189v + 0.000012v²)
+  function velocityForVDOTFraction(vdot, fraction) {
+    var target = vdot * fraction;
+    var a = 0.000104 - 0.000012 * target;
+    var b = 0.182258 - 0.000189 * target;
+    var c = -4.60 - 0.8 * target;
+
+    var discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) return 0;
+
+    // Take the positive root
+    return (-b + Math.sqrt(discriminant)) / (2 * a);
+  }
+
+  // === Format seconds to HH:MM:SS or MM:SS ===
+  function formatTime(seconds) {
+    if (seconds <= 0 || isNaN(seconds)) return "--:--";
+    var h = Math.floor(seconds / 3600);
+    var m = Math.floor((seconds % 3600) / 60);
+    var s = Math.round(seconds % 60);
+    if (s === 60) { m++; s = 0; }
+    if (m === 60) { h++; m = 0; }
+
+    if (h > 0) {
+      return h + ":" + pad2(m) + ":" + pad2(s);
+    }
+    return m + ":" + pad2(s);
+  }
+
+  function pad2(n) {
+    return n < 10 ? "0" + n : "" + n;
+  }
+
+  // === Format velocity to pace (mm:ss per mile or per km) ===
+  function formatPace(velMetersPerMin, unit) {
+    if (velMetersPerMin <= 0) return "--:--";
+    var metersPerUnit = unit === "mi" ? 1609.344 : 1000;
+    var minutesPerUnit = metersPerUnit / velMetersPerMin;
+    var mins = Math.floor(minutesPerUnit);
+    var secs = Math.round((minutesPerUnit - mins) * 60);
+    if (secs === 60) { mins++; secs = 0; }
+    return mins + ":" + pad2(secs);
+  }
+
+  // === Main calculation ===
+  function calculate() {
+    var d1Mi = getDistanceInMiles();
+    var t1Sec = getTotalSeconds();
+
+    if (d1Mi <= 0 || t1Sec <= 0) {
+      results.classList.add("hidden");
+      emptyState.classList.remove("hidden");
+      return;
+    }
+
+    var t1Min = t1Sec / 60;
+
+    // Calculate VDOT
+    var vdot = calcVDOT(d1Mi, t1Min);
+    document.getElementById("vdot-score").textContent = vdot.toFixed(1);
+
+    // Riegel predictions
+    for (var key in PREDICT_DISTANCES_MI) {
+      var predSec = riegel(t1Sec, d1Mi, PREDICT_DISTANCES_MI[key]);
+      var elId = "eq-" + key;
+      var el = document.getElementById(elId);
+      if (el) el.textContent = formatTime(predSec);
+    }
+
+    // Training pace zones
+    for (var zoneName in ZONES) {
+      var range = ZONES[zoneName];
+      var vSlow = velocityForVDOTFraction(vdot, range[0]);
+      var vFast = velocityForVDOTFraction(vdot, range[1]);
+
+      var paceSlow = formatPace(vSlow, paceUnit);
+      var paceFast = formatPace(vFast, paceUnit);
+
+      var elId = "zone-" + zoneName;
+      var el = document.getElementById(elId);
+      if (el) el.textContent = paceFast + " – " + paceSlow;
+    }
+
+    results.classList.remove("hidden");
+    emptyState.classList.add("hidden");
+  }
+
+  // === Event listeners ===
+  calcBtn.onclick = calculate;
+
+  // Recalculate when any time input changes
+  timeH.oninput = function() { calculate(); };
+  timeM.oninput = function() { calculate(); };
+  timeS.oninput = function() { calculate(); };
+  distInput.oninput = function() { calculate(); };
+
+  // Recalculate on pace unit change
+  paceUnitMi.onclick = function() {
+    setPaceUnit("mi");
+    calculate();
+  };
+  paceUnitKm.onclick = function() {
+    setPaceUnit("km");
+    calculate();
+  };
+
+  // === Initial state: 5K in 25:00 default ===
+  highlightChips(3.11);
+
+})();
+</script>
+
+</body>
+</html>
