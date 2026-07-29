@@ -173,8 +173,9 @@
     </div>
 
     <!-- Empty state: shown when no circles exist (future-proofing) -->
-    <div class="empty-state hidden" id="circles-empty">
+    <div class="empty-state" id="circles-empty" style="display:none;">
       <p class="text-muted">This circle is waiting for its first members.</p>
+      <a href="/onboarding/first-timer" class="btn btn-primary mt-4" style="font-size:13px;">Map your roadmap</a>
     </div>
 
   </div>
@@ -222,6 +223,17 @@
     localStorage.setItem('cookieConsent', 'true');
     document.getElementById('cookie-banner').remove();
   });
+})();
+</script>
+
+<script>
+// Show empty state only when all circle sections are empty
+(function() {
+  var sections = document.querySelectorAll('#cohorts .circle-card, #local-groups .circle-card, #interest-groups .circle-card, #invite-circles .circle-card');
+  var empty = document.getElementById('circles-empty');
+  if (empty && sections.length === 0) {
+    empty.style.display = '';
+  }
 })();
 </script>
 

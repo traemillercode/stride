@@ -745,3 +745,70 @@ margin-bottom: 12px;
   z-index: 1001;
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
+
+/* ── Source badge ── */
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+.source-badge svg { width: 14px; height: 14px; flex-shrink: 0; }
+.source-badge.src-garmin { color: var(--cobalt); }
+.source-badge.src-strava { color: #FC4C02; }
+.source-badge.src-coros { color: var(--lime); }
+.source-badge.src-apple_health { color: var(--charcoal); }
+.source-badge.src-manual { color: var(--text-muted); }
+
+/* ── Activity location ── */
+.activity-location {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Activity stats row ── */
+.activity-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.activity-stat-distance {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--charcoal);
+}
+.activity-stat-pace {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.activity-stat-duration {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── Activity narrative ── */
+.activity-narrative {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+/* ── Activity card meta row ── */
+.activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
